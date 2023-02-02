@@ -6,8 +6,6 @@ A game to build and cyclise a polypeptide for reinforcement learning
 ## Description:
 This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
 
-
-
 ## Dependencies:
 `pip3 install numpy gym tainshou pytorch`
 
@@ -39,10 +37,8 @@ The Rewards are as follows:
 |Moving clockwise            | Int +1         |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Moving anti-clockwise       | Int -1         |If the Cα if moving towards the start poisition before the switch and away from the start position after the switch|
 
+`python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
 
+`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (PPO using PyTorch and Tainshou).
 
-`python3 MolecularTetris.py -p` to manually play the game
-
-`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (PPO using PyTorch and Tainshou)
-
-`python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file
+`python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
