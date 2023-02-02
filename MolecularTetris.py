@@ -1,9 +1,11 @@
+import os
 import math
 import shutil
 import warnings
 import subprocess
 import numpy as np
 from Pose.pose import *
+from pathlib import Path
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 warnings.filterwarnings('ignore')
 
@@ -12,8 +14,8 @@ class MolecularTetris():
 	def __init__(self):
 		''' Initialise global variables '''
 		self.observation_space = Box(
-			low=np.array( [0,   0,   0, -50]),
-			high=np.array([9, 360, 360,  50]),
+			low=np.array( [0,  0, 0,   0, -50, 0, 0,   0, 0, -50]),
+			high=np.array([1, 15, 1, 360,  50, 1, 7, 360, 7,  50]),
 			dtype=np.float32)
 		self.action_space = Discrete(8)
 		self.n = None
@@ -43,9 +45,9 @@ class MolecularTetris():
 		Rx = np.array([[1,  0,   0], [0, cx, -sx], [0, sx,  cx]])
 		Ry = np.array([[ cy, 0, sy], [  0, 1,  0], [-sy, 0, cy]])
 		Rz = np.array([[cz, -sz, 0], [sz,  cz, 0], [0,    0, 1]])
-		R = Rz.dot(Ry).dot(Rx)
+		R  = Rz.dot(Ry).dot(Rx)
 		return(R)
-	def path(self, export=False):
+	def path(self, path=False, axis=False):
 		''' Generate an elliptical path and return important metrics '''
 		a, b, o, j, w = self.a, self.b, self.o, self.j, self.w
 		R  = self.RotationMatrix(o, j, w)
@@ -66,104 +68,76 @@ class MolecularTetris():
 		start = np.matmul(start, R)
 		start_mag = np.linalg.norm(start)
 		start = C + start
-		if export:
-			self.points = []
-			self.points.append(C)
-			self.points.append(F1)
-			self.points.append(F2)
+		vX = F1 - F2
+		X  = (vX / np.linalg.norm(vX))
+		y  = math.sqrt(b**2)
+		y  = np.array([C[0], C[1], C[2]]) - np.array([0, y, 0])
+		y  = C - y
+		vY = -np.matmul(y, R)
+		Y  = (vY / np.linalg.norm(vY))
+		vZ = np.cross(vY, vX)
+		Z  = (vZ / np.linalg.norm(vZ))
+		if path:
+			points = []
+			points.append(C)
+			points.append(F1)
+			points.append(F2)
 			for x in np.arange(-a, a, 1):
 				y2 = (1 - x**2/a**2) * b**2
 				yt =  math.sqrt(y2)
 				yb = -math.sqrt(y2)
-				ut = np.array([C[0], C[1], C[2]]) - np.array([x, yt, 0])
-				ub = np.array([C[0], C[1], C[2]]) - np.array([x, yb, 0])
+				ut = np.array(C) - np.array([x, yt, 0])
+				ub = np.array(C) - np.array([x, yb, 0])
 				ut = C - ut
 				ub = C - ub
 				ut = np.matmul(ut, R)
 				ub = np.matmul(ub, R)
 				ut = C + ut
 				ub = C + ub
-				pt = np.array([ut[0], ut[1], ut[2]])
-				pb = np.array([ub[0], ub[1], ub[2]])
-				self.points.append(pt)
-				self.points.append(pb)
-		return(start, F1, F2)
+				points.append(ut)
+				points.append(ub)
+			return(points)
+		if axis: return(start, F1, F2, e, X, Y, Z)
+		else:    return(start, F1, F2, e)
 	def project(self, atom):
 		''' Project an atom onto the ellipse to get point P and its angle T '''
 		C, a, b = self.C, self.a, self.b
-		R   = self.RotationMatrix(self.o, self.j, self.w)
-		R_  = np.linalg.inv(R)
+		R  = self.RotationMatrix(self.o, self.j, self.w)
+		R_ = np.linalg.inv(R)
 		atom_ = atom - C
 		atom_ = np.matmul(atom_, R_)
-		T   = math.atan2(atom_[1], atom_[0])
+		T  = math.atan2(atom_[1], atom_[0])
 		r  = (a*b)/math.sqrt(a**2 * math.sin(T)**2 + b**2 * math.cos(T)**2)
 		P_ = np.array([r * math.cos(T), r * math.sin(T), 0])
 		P  = np.matmul(P_, R)
 		P  = C + P
 		vP = P - atom
 		vP_mag = np.linalg.norm(vP)
-		T   = T * 180 / math.pi
+		T  = T * 180 / math.pi
 		if T < 0: T += 360.0
 		if T == 0.0: T = 360.0
 		return(T, P, vP, vP_mag, r)
 	def render(self, show=False, save=True, filename='molecule'):
-		''' Export the molecule as a PDB file and display it'''
-		start, F1, F2 = self.path(export=True)
-		T, P, vP, vP_mag, r = self.project(self.pose.GetAtom(self.i, 'CA'))
-		self.points.append(P)
-		fCA, vcfCA, centre = self.futureCA(vector=True)
-		self.points.append(fCA)
-		self.points.append(centre)
-		T, P, vP, vP_mag, r = self.project(self.futureCA())
-		self.points.append(P)
-		Tx, Ty, Tz, X, Y, Z = self.angles(P - centre, axis=True)
-		self.points.append(X + centre)
-		self.points.append(Y + centre)
-		self.points.append(Z + centre)
+		''' Export the molecule as a PDB file and display it '''
+		points = self.path(path=True)
 		with open('path.pdb', 'w') as F:
-			for i, p in enumerate(self.points):
-				if i == 0:
-					a, e, c = 'C', 'C', 'A'
-					F.write('HEADER Path Centre\n')
-				elif i == 1:
-					a, e, c = 'O', 'O', 'A'
-					F.write('HEADER F1\n')
-				elif i == 2:
-					a, e, c = 'O', 'O', 'A'
-					F.write('HEADER F2\n')
-				elif i == 3:
-					a, e, c = 'H', 'H', 'B'
-					F.write('HEADER Path\n')
-				elif i == len(self.points)-7:
-					a, e, c = 'I', 'I', 'C'
-					F.write('HEADER Projection of Current CA\n')
-				elif i == len(self.points)-6:
-					a, e, c = 'S', 'S', 'C'
-					F.write('HEADER Future CA\n')
-				elif i == len(self.points)-5:
-					a, e, c = 'O', 'O', 'C'
-					F.write('HEADER Axis Centre\n')
-				elif i == len(self.points)-4:
-					a, e, c = 'S', 'S', 'C'
-					F.write('HEADER Projected of Future CA\n')
-				elif i == len(self.points)-3:
-					a, e, c = 'H', 'H', 'C'
-					F.write('HEADER X-axis\n')
-				elif i == len(self.points)-2:
-					a, e, c = 'H', 'H', 'C'
-					F.write('HEADER Y-axis\n')
-				elif i == len(self.points)-1:
-					a, e, c = 'H', 'H', 'C'
-					F.write('HEADER Z-axis\n')
-				else:
-					a, e, c = 'H', 'H', 'B'
+			for i, p in enumerate(points):
+				if    i == 0: a, e, c = 'N', 'N', 'A' ; F.write('HEADER C\n')
+				elif  i == 1: a, e, c = 'O', 'O', 'A' ; F.write('HEADER F1\n')
+				elif  i == 2: a, e, c = 'O', 'O', 'A' ; F.write('HEADER F2\n')
+				elif  i == 3: a, e, c = 'H', 'H', 'B' ; F.write('HEADER Path\n')
+				else: a, e, c = 'H', 'H', 'B'
 				A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
 				x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
 				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
 				F.write(Entry)
 		self.pose.Export('{}.pdb'.format(filename))
-		display = ['pymol', 'molecule.pdb', 'path.pdb']
-		remove = ['rm', 'molecule.pdb', 'path.pdb']
+		if Path('points.pdb').exists():
+			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
+			remove = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
+		else:
+			display = ['pymol', 'molecule.pdb', 'path.pdb']
+			remove = ['rm', 'molecule.pdb', 'path.pdb']
 		locate = shutil.which('pymol')
 		if show == True and save == True:
 			if locate == None:
@@ -180,12 +154,21 @@ class MolecularTetris():
 			return
 		elif show == False and save == False:
 			subprocess.run(remove)
+	def export(self, P, atom, define):
+		''' Export specific point '''
+		with open('points.pdb', 'a') as F:
+			F.write(f'HEADER {define}\n')
+			a, e, c = atom, atom, 'C'
+			A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
+			x, y, z, o, t, q = P[0], P[1], P[2], 1.0, 1.0, 0.0
+			Entry = self.pose.PDB_entry(A,1,a,l,r,c,s,I,x,y,z,o,t,q,e)
+			F.write(Entry)
 	def position(self):
 		''' Position the polypeptide at the start position of the path '''
 		CA = self.pose.GetAtom(0, 'CA')
 		AAcoord = self.pose.data['Coordinates']
 		AAcoord = (self.start - CA) + AAcoord
-		Ax, Ay, Az = 180+self.o,  0-self.j,  -45-self.w
+		Ax, Ay, Az = 180+self.o, 0-self.j, -45-self.w
 		R = self.RotationMatrix(Ax, Ay, Az)
 		AAcoord = AAcoord - self.start
 		AAcoord = np.matmul(AAcoord, R)
@@ -224,10 +207,12 @@ class MolecularTetris():
 		self.o = np.random.uniform(0, 90)
 		self.j = np.random.uniform(0, 90)
 		self.w = np.random.uniform(0, 90)
-		self.start, F1, F2 = self.path()
+		self.start, F1, F2, e = self.path()
 		self.addAA()
 		self.T = 360
-		S, R, St, info, data = self.SnR(self.start, F1, F2)
+		self.F1P = 0
+		self.switch = 0
+		S, R, St, info, data = self.SnR(self.start, F1, F2, e)
 		return(S, data)
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
@@ -236,10 +221,10 @@ class MolecularTetris():
 		psi = None
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
-		start, F1, F2, = self.path()
-		return(self.SnR(start, F1, F2))
-	def futureCA(self, vector=False):
-		''' Get future CA's position given current amino acid '''
+		start, F1, F2, e = self.path()
+		return(self.SnR(start, F1, F2, e))
+	def AminoAcidOri(self):
+		''' Get amino acid origin and its axis '''
 		N  = self.pose.GetAtom(self.i, 'N')
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
@@ -248,135 +233,213 @@ class MolecularTetris():
 		vNCA_mag = np.linalg.norm(vNCA)
 		vNCA = vNCA*(3.716521828269005/vNCA_mag)
 		vNCA_mag = np.linalg.norm(vNCA)
-		centre = N - vNCA
-		vNCAxvCAC = np.cross(vNCA, vCAC)
-		vNCAxvNCAxvCAC = np.cross(vNCA, vNCAxvCAC)
-		vNCAxvNCAxvCAC_mag = np.linalg.norm(vNCAxvNCAxvCAC)
-		vNCAxvNCAxvCAC = vNCAxvNCAxvCAC*(3.18706212678699/vNCAxvNCAxvCAC_mag)
-		fCA = vNCAxvNCAxvCAC + centre
-		vcfCA = centre - fCA
-		if vector:
-			return(fCA, vcfCA, centre)
-		else:
-			return(fCA)
-	def angles(self, v, axis=False):
-		''' Get direction angles that point towards a projection point '''
-		N  = self.pose.GetAtom(self.i, 'N')
-		CA = self.pose.GetAtom(self.i, 'CA')
-		C  = self.pose.GetAtom(self.i, 'C')
+		origin = N - vNCA
 		vX = CA - N
-		vCAC = CA - C
-		X = (vX / np.linalg.norm(vX))
+		X = vX / np.linalg.norm(vX)
 		X_mag = np.linalg.norm(X)
 		vZ = np.cross(vX, vCAC)
-		Z = (vZ / np.linalg.norm(vZ))
+		Z = vZ / np.linalg.norm(vZ)
 		Z_mag = np.linalg.norm(Z)
 		vY = np.cross(vX, vZ)
-		Y = (vY / np.linalg.norm(vY))
+		Y = vY / np.linalg.norm(vY)
 		Y_mag = np.linalg.norm(Y)
-		v_mag = np.linalg.norm(v)
-		Tx = math.acos(np.dot(v, X)/(v_mag)) * 180/math.pi
-		Ty = math.acos(np.dot(v, Y)/(v_mag)) * 180/math.pi
-		Tz = math.acos(np.dot(v, Z)/(v_mag)) * 180/math.pi
-		AxX = np.cross(v, X)
-		AxY = np.cross(v, Y)
-		AxZ = np.cross(v, Z)
-		if AxX[0] <= 0: Tx = 360 - Tx
-		if AxY[1] <= 0: Ty = 360 - Ty
-		if AxZ[2] <= 0: Tz = 360 - Tz
-		if axis:
-			return(Tx, Ty, Tz, X, Y, Z)
-		else:
-			return(Tx, Ty, Tz)
-	def SnR(self, start, F1, F2):
+		return(origin, X, Y, Z)
+	def future(self, phi=0, F1=[0, 0, 0], F2=[0, 0, 0], plot=False):
+		''' For a phi angle return the distance of fCA and the angle of P '''
+		phi, PHI = math.radians(phi), phi
+		a, b = self.a, self.b
+		oriA, XA, YA, ZA = self.AminoAcidOri()
+		d = 3.1870621267869894
+		fCA = oriA + YA * d
+		T, fP, _, _, radius = self.project(fCA)
+		vCAP = fP - fCA
+		vCAP_mag = np.linalg.norm(fP - fCA)
+		R  = self.RotationMatrix(self.o, self.j, self.w)
+		R_ = np.linalg.inv(R)
+		RM = np.array([
+		[XA[0], XA[1], XA[2]],
+		[YA[0], YA[1], YA[2]],
+		[ZA[0], ZA[1], ZA[2]]])
+		RM_ = np.linalg.inv(RM)
+		fCA_phi = [0, d * math.cos(phi), d * math.sin(phi)]
+		C_ori = np.matmul(self.C - oriA, RM_)
+		F1_ori = np.matmul(F1 - oriA, RM_)
+		F2_ori = np.matmul(F2 - oriA, RM_)
+		fCA_x = np.matmul(fCA_phi, RM)
+		fCA_x = fCA_x + oriA
+		fCA_x = fCA_x - self.C
+		fCA_x = np.matmul(fCA_x, R_)
+		theta = math.atan2(fCA_x[1], fCA_x[0])
+		r = (a*b)/math.sqrt(a**2*math.sin(theta)**2 + b**2*math.cos(theta)**2)
+		fP_phi = np.array([r * math.cos(theta), r * math.sin(theta), 0])
+		fP_phi = np.matmul(fP_phi, R)
+		fP_phi = fP_phi + self.C
+		fP_phi = np.matmul(fP_phi - oriA, RM_)
+		vCAP_phi = fP_phi - fCA_phi
+		vCAP_phi_mag = np.linalg.norm(vCAP_phi)
+		T = theta * 180 / math.pi
+		if T < 0: T += 360.0
+		if T == 0.0: T = 360.0
+		if plot:
+			self.export(oriA, 'N', 'Amino Acid Origin')
+			XA = [XA[0]+oriA[0], XA[1]+oriA[1], XA[2]+oriA[2]]
+			YA = [YA[0]+oriA[0], YA[1]+oriA[1], YA[2]+oriA[2]]
+			ZA = [ZA[0]+oriA[0], ZA[1]+oriA[1], ZA[2]+oriA[2]]
+			self.export(XA, 'I', 'Amino Acid X-axis')
+			self.export(YA, 'I', 'Amino Acid Y-axis')
+			self.export(ZA, 'I', 'Amino Acid Z-axis')
+			X, Y, Z = [1, 0, 0], [0, 1, 0], [0, 0, 1]
+			self.export([0, 0, 0], 'C', 'Global Origin')
+			self.export(X, 'H', 'Global X-axis')
+			self.export(Y, 'H', 'Global Y-axis')
+			self.export(Z, 'H', 'Global Z-axis')
+			self.export(C_ori, 'S', 'C_ori')
+			self.export(F1_ori, 'O', 'F1_ori')
+			self.export(F2_ori, 'O', 'F2_ori')
+			self.export(fCA, 'S', 'fCA')
+			self.export(fP, 'I', 'fP')
+			self.export(fCA_phi, 'S', f'fCA_phi_{PHI}')
+			self.export(fP_phi, 'I', f'fP_phi_{PHI}')
+			R = self.RotationMatrix(self.o, self.j, self.w)
+			for x in np.arange(-a, a, 1):
+				y2 = (1 - x**2/a**2) * b**2
+				yt =  math.sqrt(y2)
+				yb = -math.sqrt(y2)
+				ut = np.array(self.C) - np.array([x, yt, 0])
+				ub = np.array(self.C) - np.array([x, yb, 0])
+				ut = self.C - ut
+				ub = self.C - ub
+				ut = np.matmul(ut, R)
+				ub = np.matmul(ub, R)
+				ut = self.C + ut
+				ub = self.C + ub
+				pt = np.matmul(ut - oriA, RM_)
+				pb = np.matmul(ub - oriA, RM_)
+				self.export(pt, 'H', f't{x}')
+				self.export(pb, 'H', f'b{x}')
+		return(T, vCAP_phi_mag)
+	def SnR(self, start, F1, F2, e):
 		''' Return the state features and rewards after each game step '''
-		fCA, _, centre = self.futureCA(vector=True)
-		T, P, vP, vP_mag, r = self.project(fCA)
-		Tx, Ty, Tz = self.angles(P - centre)
-		if self.i == 0: Tz = 90.0
-		# Reward function
+		# Projected angle and distance of current CA atom
+		CA = self.pose.GetAtom(self.i, 'CA')
+		T, P, _, d, radius = self.project(CA)
+		###########################
+		##### Reward Function #####
+		###########################
 		R = 0
-		if T < self.T: R += 1
-		else: R -= 1
+		# Reward for moving forward
+		if self.T > T: R += 1
+		else:          R -= 1
 		self.T = T
-		# Features
+		# Penalty for distance from ellipse surface
+		R -= d
+		# F1->CA & F2->CA distance
+		F1CA = np.linalg.norm(F1 - CA)
+		F2CA = np.linalg.norm(F2 - CA)
+		# F1->P & F2->P distance
+		F1P = np.linalg.norm(F1 - P)
+		F2P = np.linalg.norm(F2 - P)
+		# Reward for being outside ellipse
+		if F1CA > F1P and F2CA > F2P: R += 1
+		else:                         R -= 1
+		# Reward for going around ellipse clockwise
+		if T < 180: self.switch = 1
+		if   self.switch == 0 and self.F1P < F1P: R += 1
+		elif self.switch == 1 and self.F1P > F1P: R += 1
+		else:                                     R -= 1
+		self.F1P = F1P
+		###########################
+		######## Features #########
+		###########################
+		# Check if step is odd or even
 		if   (self.i % 2) != 0: OE = 0
 		elif (self.i % 2) == 0: OE = 1
-		S = np.array([self.i, T, Tz, vP_mag])
-		# End state condition
+		# Determine which action leads to lowest fT and which to lowest fd
+		Ts, ds = {}, {}
+		for action in range(self.action_space.n):
+			phi = self.get_angle_meanings(action)
+			fT, fd = self.future(phi=phi, F1=F1, F2=F2)
+			Ts[action] = fT
+			ds[action] = fd
+		min_fT_a = [key for key in Ts if Ts[key] == min(Ts.values())][0]
+		min_fd_a = [key for key in Ts if ds[key] == min(ds.values())][0]
+		min_fT_v = Ts[min_fT_a]
+		min_fd_v = ds[min_fd_a]
+		S = np.array([
+			e, self.i, OE, T, d, self.switch,
+			min_fT_a, min_fT_v, min_fd_a, min_fd_v])
+		###########################
+		### End State Condition ###
+		###########################
 		St = False
 		if self.i >= 15:
-			R = 1
 			St = True
-		# Extra info
+		###########################
+		####### Extra Info ########
+		###########################
 		info, data = None, {}
 		return(S, R, St, info, data)
 
 def play(show=True):
 	''' Manually play the game '''
+	print('\n' + '='*95)
 	print('''\
 	╔╦╗┌─┐┬  ┌─┐┌─┐┬ ┬┬  ┌─┐┬─┐  ╔╦╗┌─┐┌┬┐┬─┐┬┌─┐
 	║║║│ ││  ├┤ │  │ ││  ├─┤├┬┘   ║ ├┤  │ ├┬┘│└─┐
 	╩ ╩└─┘┴─┘└─┘└─┘└─┘┴─┘┴ ┴┴└─   ╩ └─┘ ┴ ┴└─┴└─┘
-	           0
-	
-	   7          /    1
-	             /
-	            /
-	6          0          2
-	
-	        ACTIONS
-	   5               3
-	
-	           4
-	
-	Feature 1: Index: of step (game has max 15 steps)
-	Feature 2: Angle: +1 reward if it decreases, -1 reward if it increases
-	Feature 3: Direction: angle to point
-	Feature 4: Distance: to point''')
-	seed = input('Choose a seed value, empty for a random seed, q to quit > ')
-	if seed == '': seed = None
-	elif seed == 'q': exit()
+	           0                            +
+	                                       +   C
+	   7          /    1         O-H       +  /|
+	             /               |        +  / |
+	            /              O=C        + /  |
+	6          0          2       \       +/   |
+	                             H-Ca-----P    |
+	        ACTIONS               /        +   |
+	   5               3       H-N         +   |
+	                             |          +  F1
+	           4                              +\n''')
+	print('='*95)
+	seed = input('\nChoose a seed value, empty for a random seed, q to quit > ')
+	if    seed == '': seed = None
+	elif  seed == 'q': exit()
 	else: seed = int(seed)
-	print('-'*80)
-	print(' '*15, 'Features', ' '*40, 'Reward')
-	print('-'*55 + '|' + '-'*24)
+	print('\n' + '-'*95)
+	print(' '*25, 'Features', ' '*45, 'Reward')
+	print('-'*70 + '|' + '-'*24)
 	env = MolecularTetris()
 	env.seed(seed)
 	obs = env.reset()
-	index = int(obs[0][0])
-	angle = round(obs[0][1], 3)
-	dirct = round(obs[0][2], 3)
-	disnt = round(obs[0][3], 3)
-	output = '{:<15}{:<15}{:<15}{:<15}' \
-	.format(index, angle, dirct, disnt)
+	n = env.observation_space.shape[0] - 1
+	types = ['e', 'i', 'OE', 'T', 'mag', 'Ta', 'Tv', 'Da', 'Dv']
+	title = ''
+	for F in types: title += '{:<{}}'.format(F, n)
+	print(title)
+	output = ''
+	for F in obs[0]: F = round(F, 1) ; output += '{:<{}}'.format(F, n)
 	print(output)
 	Gt = []
 	St = False
-	while(St==False):
+	As = [x for x in range(env.action_space.n)]
+	actions = []
+	while (St == False):
 		inp = input('Action > ')
 		if inp == 'q': exit()
-		try:
-			inp = int(inp)
-		except:
-			print('incorrect input')
-			continue
-		if inp not in [0, 1, 2, 3, 4, 5, 6, 7]:
-			print('incorrect input')
-			continue
+		try: inp = int(inp)
+		except: print('incorrect input') ; continue
+		if inp not in As: print('incorrect input') ; continue
+		actions.append(inp)
 		obs = env.step(inp)
-		index = int(obs[0][0])
-		angle = round(obs[0][1], 3)
-		dirct = round(obs[0][2], 3)
-		disnt = round(obs[0][3], 3)
 		R = round(obs[1], 3)
-		output = '{:<15}{:<15}{:<15}{:<15}{:<5}' \
-		.format(index, angle, dirct, disnt, R)
+		output = ''
+		for F in obs[0]: F = round(F, 1) ; output += '{:<{}}'.format(F, n)
+		output += '  {:<5}'.format(R)
 		print(output)
 		Gt.append(R)
 		St = obs[2]
 	if show: env.render(show=True, save=False)
-	print('-----------------')
+	print('='*95)
+	print('Actions:', actions)
+	print('-'*20)
 	print('Total Reward =', sum(Gt))
 
 ################################################################################
@@ -405,21 +468,16 @@ def RL(epochs):
 	# 1. Setup the training and testing environments
 	train = SubprocVectorEnv([lambda:env for _ in range(100)])
 	tests = SubprocVectorEnv([lambda:env for _ in range(75)])
-	# 2. Setup neural networks and policy
-	#---------- PPO
+	# 2. Setup neural networks and policy - PPO
 	net = Net(features, hidden_sizes=[64, 64, 64], device=device)
 	actor = Actor(net, actions, device=device).to(device)
 	critic = Critic(net, device=device).to(device)
 	actor_critic = ActorCritic(actor, critic)
 	optim = torch.optim.Adam(actor_critic.parameters(), lr=1e-4)
 	dist = torch.distributions.Categorical
-	policy = PPOPolicy(actor, critic, optim, dist, action_space=env.action_space, deterministic_eval=True)
-#	#---------- DQN
-#	net = Net(features, hidden_sizes=[128, 128, 128], device=device)
-#	actor = Actor(net, actions, device=device).to(device)
-#	optim = torch.optim.Adam(actor.parameters(), lr=1e-4)
-#	policy = DQNPolicy(actor, optim, discount_factor=0.9, estimation_step=3, target_update_freq=320)
-#	#----------
+	policy = PPOPolicy( \
+	actor, critic, optim, dist, action_space=env.action_space, \
+	deterministic_eval=True)
 	# 3. Setup vectorised replay buffer
 	VRB = VectorReplayBuffer(20000, len(train))
 	# 4. Setup collectors
@@ -427,7 +485,6 @@ def RL(epochs):
 	tests_collector = Collector(policy, tests)
 	# 5. Train
 	result = onpolicy_trainer(
-#	result = offpolicy_trainer(
 		policy,
 		train_collector,
 		tests_collector,
@@ -447,9 +504,10 @@ def RL(epochs):
 	policy.load_state_dict(torch.load('policy.pth'))
 	policy.eval()
 	result = tests_collector.collect(n_episode=1, render=True)
-	print('Final reward: {}, length: {}'.format(result['rews'].mean(), result['lens'].mean()))
+	print('Final reward: {}, length: {}' \
+	.format(result['rews'].mean(), result['lens'].mean()))
 
 
 
 play()
-#RL(4)
+#RL(2000)
