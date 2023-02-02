@@ -1,6 +1,8 @@
 import os
+import sys
 import math
 import shutil
+import argparse
 import warnings
 import subprocess
 import numpy as np
@@ -8,6 +10,15 @@ from Pose.pose import *
 from pathlib import Path
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 warnings.filterwarnings('ignore')
+
+parser = argparse.ArgumentParser(description='MolecularTetris Gam')
+parser.add_argument('-p', '--play', action='store_true',
+help='Manually play the game')
+parser.add_argument('-rl', '--rl_train', action='store_true',
+help='Train a reinforcement learning agent')
+parser.add_argument('-rlp', '--rl_play', nargs='+',
+help='Have an agent play the game using the policy file')
+args = parser.parse_args()
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
@@ -405,7 +416,7 @@ def play(show=True):
 	else: seed = int(seed)
 	print('\n' + '-'*95)
 	print(' '*25, 'Features', ' '*45, 'Reward')
-	print('-'*70 + '|' + '-'*24)
+	print('-'*79 + '|' + '-'*15)
 	env = MolecularTetris()
 	env.seed(seed)
 	obs = env.reset()
@@ -422,7 +433,7 @@ def play(show=True):
 	As = [x for x in range(env.action_space.n)]
 	actions = []
 	while (St == False):
-		inp = input('Action > ')
+		inp = input('Action [0, 7] q to quit > ')
 		if inp == 'q': exit()
 		try: inp = int(inp)
 		except: print('incorrect input') ; continue
@@ -448,8 +459,8 @@ def play(show=True):
 ################################################################################
 ################################################################################
 
-def RL(epochs):
-	''' Reinforcement Learning '''
+def RL(epochs=1, play=False, filename='policy.pth'):
+	''' Reinforcement Learning setup '''
 	import torch
 	import tianshou
 	from torch import nn
@@ -466,8 +477,8 @@ def RL(epochs):
 	features = env.observation_space.shape
 	actions  = env.action_space.n
 	# 1. Setup the training and testing environments
-	train = SubprocVectorEnv([lambda:env for _ in range(100)])
-	tests = SubprocVectorEnv([lambda:env for _ in range(75)])
+	train = SubprocVectorEnv([lambda:env for _ in range(200)])
+	tests = SubprocVectorEnv([lambda:env for _ in range(150)])
 	# 2. Setup neural networks and policy - PPO
 	net = Net(features, hidden_sizes=[64, 64, 64], device=device)
 	actor = Actor(net, actions, device=device).to(device)
@@ -483,31 +494,35 @@ def RL(epochs):
 	# 4. Setup collectors
 	train_collector = Collector(policy, train, VRB)
 	tests_collector = Collector(policy, tests)
-	# 5. Train
-	result = onpolicy_trainer(
-		policy,
-		train_collector,
-		tests_collector,
-		step_per_epoch=50000,
-		max_epoch=epochs,
-		step_per_collect=20,
-		episode_per_test=10,
-		repeat_per_collect=10,
-		batch_size=256,
-		stop_fn=lambda mean_reward: mean_reward >= 50)
-	print(result)
-	# 6. Save policy
-	torch.save(policy.state_dict(), 'policy.pth')
-	# 7. Play
-	tests = DummyVectorEnv([lambda:MolecularTetris() for _ in range(1)])
-	tests_collector = Collector(policy, tests)
-	policy.load_state_dict(torch.load('policy.pth'))
-	policy.eval()
-	result = tests_collector.collect(n_episode=1, render=True)
-	print('Final reward: {}, length: {}' \
-	.format(result['rews'].mean(), result['lens'].mean()))
+	if not play:
+		# 5. Train
+		result = onpolicy_trainer(
+			policy,
+			train_collector,
+			tests_collector,
+			step_per_epoch=50000,
+			max_epoch=epochs,
+			step_per_collect=20,
+			episode_per_test=10,
+			repeat_per_collect=10,
+			batch_size=256,
+			stop_fn=lambda mean_reward: mean_reward >= 50)
+		print(result)
+		# 6. Save policy
+		torch.save(policy.state_dict(), filename)
+	if play:
+		# 7. Play
+		tests = DummyVectorEnv([lambda:MolecularTetris() for _ in range(1)])
+		tests_collector = Collector(policy, tests)
+		policy.load_state_dict(torch.load(filename))
+		policy.eval()
+		result = tests_collector.collect(n_episode=1, render=True)
+		print('Final reward: {}, length: {}' \
+		.format(result['rews'].mean(), result['lens'].mean()))
 
+def main():
+	if   args.play:     play()
+	elif args.rl_train: RL(epochs=200)
+	elif args.rl_play:  RL(epochs=0, play=True, filename=argv[2])
 
-
-play()
-#RL(2000)
+if __name__ == '__main__': main()
