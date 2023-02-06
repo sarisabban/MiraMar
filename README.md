@@ -26,7 +26,7 @@ The features are as follows:
 |Reccomended distance action | [0, 7]       |The action that will result in least distance to the ellipse surface|
 |Resulting distance          | [-50, 50]    |The predicted that will result if the reccomended distance action was taken|
 
-The Rewards are as follows:
+The rewards are as follows:
 | Reward                     | Value          | Description           |
 |----------------------------|----------------|-----------------------|
 |Forward move                | Int +1         |When current Cα angle is less than previous angle|
