@@ -43,5 +43,4 @@ The Rewards are as follows:
 
 `python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
 
-## Output
 The output of the game play are two .pdb (protein databank) files that can be viewed using PyMOL 'apt install pymol' or any other molecular visualisation software, or you can upload the structure [here](https://www.rcsb.org/3d-view) to view the molecules on a web browser.
