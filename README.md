@@ -6,12 +6,9 @@ A game to build and cyclise a polypeptide for reinforcement learning
 ## Description:
 This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
 
-## Dependencies:
-`pip3 install numpy gym tainshou pytorch`
+## How to play:
+The goal is to build a cyclic polypeptide molecule, one amino acid at a time,going around the elliptical path.
 
-`git clone https://github.com/sarisabban/Pose.git`
-
-## How to use:
 The features are as follows:
 | Feature                    | Value (float)| Description           |
 |----------------------------|--------------|-----------------------|
@@ -31,11 +28,16 @@ The rewards are as follows:
 |----------------------------|----------------|-----------------------|
 |Forward move                | Int +1         |When current Cα angle is less than previous angle|
 |Backward move               | Int -1         |When current Cα angle is larger than previous angle|
-|Distance                    | Float -distance|Distance of Cα from the surface of the ellipse|
 |Cα outside ellipse          | Int +1         |If the Cα is outside the ellipse|
 |Cα inside ellipse           | Int -1         |If the Cα is inside the ellipse|
 |Moving clockwise            | Int +1         |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Moving anti-clockwise       | Int -1         |If the Cα if moving towards the start poisition before the switch and away from the start position after the switch|
+|Pre-mature end              | Int i - 15     |If the peptide chain makes a circle around itself the game will end and a penalty if given, larger the chain the less the penalty|
+
+## How to use:
+`pip3 install numpy gym tainshou pytorch`
+
+`git clone https://github.com/sarisabban/Pose.git`
 
 `python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
 
@@ -43,4 +45,4 @@ The rewards are as follows:
 
 `python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
 
-The output of the game play are two .pdb (protein databank) files that can be viewed using PyMOL 'apt install pymol' or any other molecular visualisation software, or you can upload the structure [here](https://www.rcsb.org/3d-view) to view the molecules on a web browser.
+The output of the game play are two .pdb (protein databank) files called molecule.pdb and path.pdb. These files can be viewed using PyMOL 'apt install pymol', or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
