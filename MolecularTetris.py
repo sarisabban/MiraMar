@@ -331,6 +331,10 @@ class MolecularTetris():
 		return(T, vCAP_phi_mag)
 	def SnR(self, start, F1, F2, e):
 		''' Return the state features and rewards after each game step '''
+		# Calculating future CA
+		oriA, XA, YA, ZA = self.AminoAcidOri()
+		d = 3.1870621267869894
+		fCA = oriA + YA * d
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
 		T, P, _, d, radius = self.project(CA)
@@ -343,7 +347,7 @@ class MolecularTetris():
 		else:          R -= 1
 		self.T = T
 		# Penalty for distance from ellipse surface
-		R -= d
+#		R -= d
 		# F1->CA & F2->CA distance
 		F1CA = np.linalg.norm(F1 - CA)
 		F2CA = np.linalg.norm(F2 - CA)
@@ -383,8 +387,18 @@ class MolecularTetris():
 		### End State Condition ###
 		###########################
 		St = False
+		# If polypeptide reaches 15 amino acids
 		if self.i >= 15:
 			St = True
+		# End game if the chain made a circle onto itself
+		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
+		VECs  = [CA - fCA for CA in CAs]
+		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
+		CHECK = [1 if x < 1.5 else 0 for x in MAGs]
+		if 1 in CHECK:
+			St = True
+			# Reward at this end state only
+			R = self.i - 15
 		###########################
 		####### Extra Info ########
 		###########################
@@ -415,13 +429,13 @@ def play(show=True):
 	elif  seed == 'q': exit()
 	else: seed = int(seed)
 	print('\n' + '-'*95)
-	print(' '*25, 'Features', ' '*45, 'Reward')
-	print('-'*79 + '|' + '-'*15)
+	print(' '*25, 'Features', ' '*50, 'Reward')
+	print('-'*85 + '|' + '-'*9)
 	env = MolecularTetris()
 	env.seed(seed)
 	obs = env.reset()
 	n = env.observation_space.shape[0] - 1
-	types = ['e', 'i', 'OE', 'T', 'mag', 'Ta', 'Tv', 'Da', 'Dv']
+	types = ['e', 'i', 'OE', 'T', 'mag', 'Switch', 'Ta', 'Tv', 'Da', 'Dv']
 	title = ''
 	for F in types: title += '{:<{}}'.format(F, n)
 	print(title)
@@ -447,11 +461,11 @@ def play(show=True):
 		print(output)
 		Gt.append(R)
 		St = obs[2]
-	if show: env.render(show=True, save=False)
 	print('='*95)
 	print('Actions:', actions)
 	print('-'*20)
 	print('Total Reward =', sum(Gt))
+	if show: env.render(show=True, save=False)
 
 ################################################################################
 ################################################################################
@@ -521,8 +535,8 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.play:     play()
-	elif args.rl_train: RL(epochs=200)
+	if   args.play:     play(show=False)
+	elif args.rl_train: RL(epochs=100)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
