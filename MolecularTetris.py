@@ -332,7 +332,6 @@ class MolecularTetris():
 	def SnR(self, start, F1, F2, e):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
-		print(self.a, self.b)
 		oriA, XA, YA, ZA = self.AminoAcidOri()
 		d = 3.1870621267869894
 		fCA = oriA + YA * d
@@ -537,7 +536,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=100)
+	elif args.rl_train: RL(epochs=200)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
