@@ -213,7 +213,7 @@ class MolecularTetris():
 		np.random.seed(self.n)
 		self.i = 0
 		self.C = np.random.uniform(0, 50, size=(3,))
-		self.b = np.random.uniform(2, 5)
+		self.b = np.random.uniform(4, 8)
 		self.a = np.random.uniform(self.b, 10)
 		self.o = np.random.uniform(0, 90)
 		self.j = np.random.uniform(0, 90)
@@ -332,6 +332,7 @@ class MolecularTetris():
 	def SnR(self, start, F1, F2, e):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
+		print(self.a, self.b)
 		oriA, XA, YA, ZA = self.AminoAcidOri()
 		d = 3.1870621267869894
 		fCA = oriA + YA * d
@@ -347,7 +348,7 @@ class MolecularTetris():
 		else:          R -= 1
 		self.T = T
 		# Penalty for distance from ellipse surface
-#		R -= d
+		R -= 0.1 * d**2
 		# F1->CA & F2->CA distance
 		F1CA = np.linalg.norm(F1 - CA)
 		F2CA = np.linalg.norm(F2 - CA)
