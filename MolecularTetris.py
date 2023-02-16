@@ -26,7 +26,7 @@ class MolecularTetris():
 		''' Initialise global variables '''
 		self.observation_space = Box(
 			low=np.array( [0,  0, 0,   0, -50, 0, 0,   0, 0, -50]),
-			high=np.array([1, 15, 1, 360,  50, 1, 7, 360, 7,  50]),
+			high=np.array([1, 20, 1, 360,  50, 1, 7, 360, 7,  50]),
 			dtype=np.float32)
 		self.action_space = Discrete(8)
 		self.n = None
@@ -388,7 +388,7 @@ class MolecularTetris():
 		###########################
 		St = False
 		# If polypeptide reaches 15 amino acids
-		if self.i >= 15:
+		if self.i >= 20:
 			St = True
 		# End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
@@ -398,7 +398,15 @@ class MolecularTetris():
 		if 1 in CHECK:
 			St = True
 			# Reward at this end state only
-			R = self.i - 15
+			R = self.i - 20
+		# End game if N-term to C-term distance < 1.5
+		N_term = self.pose.GetAtom(0, 'N')
+		C_term = self.pose.GetAtom(self.i, 'C')
+		vNC = C_term - N_term
+		distance = np.linalg.norm(vNC)
+		if distance < 1.5:
+			St = True
+			R = len(self.pose.data['Amino Acids'])/20
 		###########################
 		####### Extra Info ########
 		###########################
