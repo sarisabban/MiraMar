@@ -1,4 +1,5 @@
 import os
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import sys
 import math
 import shutil
@@ -499,8 +500,8 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	features = env.observation_space.shape
 	actions  = env.action_space.n
 	# 1. Setup the training and testing environments
-	train = SubprocVectorEnv([lambda:env for _ in range(200)])
-	tests = SubprocVectorEnv([lambda:env for _ in range(150)])
+	train = SubprocVectorEnv([lambda:env for _ in range(350)]) # max possible on HPC
+	tests = SubprocVectorEnv([lambda:env for _ in range(150)]) # max possible on HPC
 	# 2. Setup neural networks and policy - PPO
 	net = Net(features, hidden_sizes=[64, 64, 64], device=device)
 	actor = Actor(net, actions, device=device).to(device)
@@ -544,7 +545,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=200)
+	elif args.rl_train: RL(epochs=1000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
