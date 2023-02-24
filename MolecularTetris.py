@@ -381,9 +381,13 @@ class MolecularTetris():
 		min_fd_a = [key for key in Ts if ds[key] == min(ds.values())][0]
 		min_fT_v = Ts[min_fT_a]
 		min_fd_v = ds[min_fd_a]
+		# Distance to closure
+		D = fCA - self.pose.GetAtom(0, 'C')
+		if self.switch == 0:
+			D = 1e3
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			min_fT_a, min_fT_v, min_fd_a, min_fd_v])
+			min_fT_a, min_fT_v, min_fd_a, min_fd_v. D])
 		###########################
 		### End State Condition ###
 		###########################
@@ -545,7 +549,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=1000)
+	elif args.rl_train: RL(epochs=3000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
