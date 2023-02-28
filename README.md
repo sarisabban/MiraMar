@@ -10,13 +10,13 @@ This is a game designed using OpenAI's gym library that builds a cyclic polypept
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time,going around the elliptical path.
 
 The **actions** are as follows:
-| Action   | Name | Value                                              |
+| Action   | Name | Values                                             |
 |----------|------|----------------------------------------------------|
 |Phi angle |P     |{0:0, 1:45, 2:90, 3:135, 4:180, 5:225, 6:270, 7:315}|
 |Psi angle |S     |{0:0, 1:45, 2:90, 3:135, 4:180, 5:225, 6:270, 7:315}|
 
 The **features** are as follows:
-| Feature                                | Name | Value    | Description           |
+| Feature                                | Name | Values   | Description           |
 |----------------------------------------|------|----------|-----------------------|
 |Eccentricity                            |e     |[0, 1]    |Eccentricity of the ellipse|
 |Index of step                           |i     |[0, 15]   |The index of the state step|
@@ -33,7 +33,7 @@ The **features** are as follows:
 |Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
-| Reward                        | Name | Value                    | Description           |
+| Reward                        | Name | Values                   | Description           |
 |-------------------------------|------|--------------------------|-----------------------|
 |Forward/Backward move          |R1    |±1                        |When current Cα angle is less than previous angle (moving forward) +1|
 |Cα Distance                    |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
