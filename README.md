@@ -41,6 +41,12 @@ The **rewards** are as follows:
 |Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Pre-mature end                 |Rt    |i - 20                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 
+The **stop condition** are as follows:
+| Condition                     | Name | Values | Description           |
+|-------------------------------|------|--------|-----------------------|
+|Polypeptide length of i=20     |St1   |R=0     |The polypeptide can only reach a maximum length of 20 amino acids|
+|Self circle                    |St2   |R=i - 20|If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+
 ## How to use:
 `pip install numpy gym pytorch tainshou`
 
