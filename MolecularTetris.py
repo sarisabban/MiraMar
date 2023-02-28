@@ -326,22 +326,20 @@ class MolecularTetris():
 		##### Reward Function #####
 		###########################
 		R = 0
-		# Reward for moving forward
+		# R1 - Reward for moving forward
 		if self.T > T: R += 1
 		else:          R -= 1
 		self.T = T
-		# Penalty for distance from ellipse surface
+		# R2 - Penalty for distance from ellipse surface
 		R -= 0.1 * d**2
-		# F1->CA & F2->CA distance
+		# R3 - Reward for being outside ellipse
 		F1CA = np.linalg.norm(F1 - CA)
 		F2CA = np.linalg.norm(F2 - CA)
-		# F1->P & F2->P distance
 		F1P = np.linalg.norm(F1 - P)
 		F2P = np.linalg.norm(F2 - P)
-		# Reward for being outside ellipse
 		if F1CA > F1P and F2CA > F2P: R += 1
 		else:                         R -= 1
-		# Reward for going around ellipse clockwise
+		# R4 - Reward for going around ellipse clockwise
 		if T < 180 and self.i != 0: self.switch = 1
 		if   self.switch == 0 and self.F1P < F1P: R += 1
 		elif self.switch == 1 and self.F1P > F1P: R += 1
@@ -383,17 +381,17 @@ class MolecularTetris():
 		### End State Condition ###
 		###########################
 		St = False
-		# If polypeptide reaches 15 amino acids
+		# St1 - If polypeptide reaches 20 amino acids
 		if self.i >= 20:
 			St = True
-		# End game if the chain made a circle onto itself
+		# St2 - End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
 		VECs  = [CA - fCA for CA in CAs]
 		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
 		CHECK = [1 if x < 1.5 else 0 for x in MAGs]
 		if 1 in CHECK:
 			St = True
-			# Reward at this end state only
+			# Rt - Reward at this end state only
 			R = self.i - 20
 #		# End game if N-term to C-term distance < 1.5
 #		N_term = self.pose.GetAtom(0, 'N')
