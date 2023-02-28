@@ -27,18 +27,13 @@ The features are as follows:
 |Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
 
 The rewards are as follows:
-| Reward                     | Name | Value                    | Description           |
-|----------------------------|------|--------------------------|-----------------------|
-|Forward/Backward move       |R1    |±1                        |When current Cα angle is less than previous angle (moving forward) +1|
-|Cα Distance                 |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
-
-
-
-|Cα outside/inside ellipse   | |Int +1         |If the Cα is outside the ellipse|
-
-|Moving clockwise            | |Int +1         |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
-|Moving anti-clockwise       | |Int -1         |If the Cα if moving towards the start poisition before the switch and away from the start position after the switch|
-|Pre-mature end              | |Int i - 15     |If the peptide chain makes a circle around itself the game will end and a penalty if given, larger the chain the less the penalty|
+| Reward                        | Name | Value                    | Description           |
+|-------------------------------|------|--------------------------|-----------------------|
+|Forward/Backward move          |R1    |±1                        |When current Cα angle is less than previous angle (moving forward) +1|
+|Cα Distance                    |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
+|Cα outside/inside ellipse      |R3    |±1                        |If the Cα is outside the ellipse +1|
+|Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
+|Pre-mature end                 |Rt    |i - 20                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 
 ## How to use:
 `pip install numpy gym pytorch tainshou`
