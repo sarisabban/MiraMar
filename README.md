@@ -10,18 +10,21 @@ This is a game designed using OpenAI's gym library that builds a cyclic polypept
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time,going around the elliptical path.
 
 The features are as follows:
-| Feature                    | Value (float)| Description           |
-|----------------------------|--------------|-----------------------|
-|Eccentricity                | [0, 1]       |Eccentricity of the ellipse|
-|Index of step               | [0, 15]      |The index of the state step|
-|Odd/Even of step            | [0, 1]       |Whether the step is even or odd value|
-|Angle of Cα                 | [0, 360]     |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα              | [-50.50]     |The distance of the Cα atom from the surface of the ellipse|
-|Switch                      | [0, 1]       |The point when the amino acid switching from moving away from the start position the returning back|
-|Reccomended angle action    | [0, 7]       |The action that will result in the greatest leap forward (most reduced angle)|
-|Resulting angle             | [0, 360]     |The predicted angle that will result if the reccomended angle action was taken|
-|Reccomended distance action | [0, 7]       |The action that will result in least distance to the ellipse surface|
-|Resulting distance          | [-50, 50]    |The predicted that will result if the reccomended distance action was taken|
+| Feature                                | Name |Value     | Description           |
+|----------------------------------------|------|----------|-----------------------|
+|Eccentricity                            |e     |[0, 1]    |Eccentricity of the ellipse|
+|Index of step                           |i     |[0, 15]   |The index of the state step|
+|Odd/Even of step                        |OE    |[0, 1]    |Whether the step is even or odd value|
+|Angle of Cα                             |T     |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
+|Distance of Cα                          |mag   |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
+|Switch                                  |Switch|[0, 1]    |The point where the chain switchs from moving away from the start position the returning back|
+|Phi angle action for lowest angle T     |Ta-phi|[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
+|Psi angle action for lowest angle T     |Ta-psi|[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
+|Resulting angle T                       |Tv    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
+|Phi angle action for lowest distance mag|Da-phi|[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
+|Psi angle action for lowest distance mag|Da-psi|[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
+|Resulting distance mag                  |Dv    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
+|Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
 
 The rewards are as follows:
 | Reward                     | Value          | Description           |
@@ -35,7 +38,7 @@ The rewards are as follows:
 |Pre-mature end              | Int i - 15     |If the peptide chain makes a circle around itself the game will end and a penalty if given, larger the chain the less the penalty|
 
 ## How to use:
-`pip3 install numpy gym tainshou pytorch`
+`pip install numpy gym pytorch tainshou`
 
 `git clone https://github.com/sarisabban/Pose.git`
 
