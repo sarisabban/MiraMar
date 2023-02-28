@@ -9,10 +9,11 @@ import subprocess
 import numpy as np
 from Pose.pose import *
 from pathlib import Path
+from collections import defaultdict
 from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 warnings.filterwarnings('ignore')
 
-parser = argparse.ArgumentParser(description='MolecularTetris Gam')
+parser = argparse.ArgumentParser(description='MolecularTetris Game')
 parser.add_argument('-p', '--play', action='store_true',
 help='Manually play the game')
 parser.add_argument('-rl', '--rl_train', action='store_true',
@@ -26,8 +27,8 @@ class MolecularTetris():
 	def __init__(self):
 		''' Initialise global variables '''
 		self.observation_space = Box(
-			low=np.array( [0,  0, 0,   0, -50, 0, 0,   0, 0, -50]),
-			high=np.array([1, 20, 1, 360,  50, 1, 7, 360, 7,  50]),
+			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, 0   ]),
+			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50, 1000]),
 			dtype=np.float32)
 		self.action_space = Discrete(8)
 		self.n = None
@@ -129,7 +130,7 @@ class MolecularTetris():
 		if T < 0: T += 360.0
 		if T == 0.0: T = 360.0
 		return(T, P, vP, vP_mag, r)
-	def render(self, show=False, save=True, filename='molecule'):
+	def render(self, show=True, save=False, filename='molecule'):
 		''' Export the molecule as a PDB file and display it '''
 		points = self.path(path=True)
 		with open('path.pdb', 'w') as F:
@@ -229,13 +230,13 @@ class MolecularTetris():
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
 		AA  = 'G'
-		phi = self.get_angle_meanings(action)
-		psi = None
+		phi = self.get_angle_meanings(action[0])
+		psi = self.get_angle_meanings(action[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
 		return(self.SnR(start, F1, F2, e))
-	def AminoAcidOri(self):
+	def AminoAcidOri(self, ori='phi'):
 		''' Get amino acid origin and its axis '''
 		N  = self.pose.GetAtom(self.i, 'N')
 		CA = self.pose.GetAtom(self.i, 'CA')
@@ -243,102 +244,84 @@ class MolecularTetris():
 		vNCA = N - CA
 		vCAC = CA - C
 		vNCA_mag = np.linalg.norm(vNCA)
+		vCAC_mag = np.linalg.norm(vCAC)
 		vNCA = vNCA*(3.716521828269005/vNCA_mag)
+		vCAC = vCAC*(2.265083239682766/vCAC_mag)
 		vNCA_mag = np.linalg.norm(vNCA)
-		origin = N - vNCA
-		vX = CA - N
-		X = vX / np.linalg.norm(vX)
-		X_mag = np.linalg.norm(X)
-		vZ = np.cross(vX, vCAC)
-		Z = vZ / np.linalg.norm(vZ)
-		Z_mag = np.linalg.norm(Z)
-		vY = np.cross(vX, vZ)
-		Y = vY / np.linalg.norm(vY)
-		Y_mag = np.linalg.norm(Y)
-		return(origin, X, Y, Z)
-	def future(self, phi=0, F1=[0, 0, 0], F2=[0, 0, 0], plot=False):
-		''' For a phi angle return the distance of fCA and the angle of P '''
-		phi, PHI = math.radians(phi), phi
+		vCAC_mag = np.linalg.norm(vCAC)
+		if ori.upper() == 'PHI':
+			origin = N - vNCA
+			vX = CA - N
+			X = vX / np.linalg.norm(vX)
+			X_mag = np.linalg.norm(X)
+			vZ = np.cross(vX, vCAC)
+			Z = vZ / np.linalg.norm(vZ)
+			Z_mag = np.linalg.norm(Z)
+			vY = np.cross(vX, vZ)
+			Y = vY / np.linalg.norm(vY)
+			Y_mag = np.linalg.norm(Y)
+			return(origin, X, Y, Z)
+		elif ori.upper() == 'PSI':
+			origin = C - vCAC
+			adjust = [-0.09576038, 0.1105656, 0.07848978]
+			origin = origin - adjust
+			vX = origin - C
+			X = vX / np.linalg.norm(vX)
+			X_mag = np.linalg.norm(X)
+			OO = self.pose.GetAtom(self.i,'O')-self.pose.GetAtom(self.i,'OXT')
+			vY = np.cross(OO, X)
+			Y = vY / np.linalg.norm(vY)
+			Y_mag = np.linalg.norm(Y)
+			vZ = np.cross(Y, X)
+			Z = vZ / np.linalg.norm(vZ)
+			Z_mag = np.linalg.norm(Z)
+			return(origin, X, Y, Z)
+	def future(self, phi=0, psi=0, F1=[0, 0, 0], F2=[0, 0, 0], plot=False):
+		''' For phi/psi angles return the distance of fCA and the angle of P '''
 		a, b = self.a, self.b
-		oriA, XA, YA, ZA = self.AminoAcidOri()
-		d = 3.1870621267869894
-		fCA = oriA + YA * d
-		T, fP, _, _, radius = self.project(fCA)
-		vCAP = fP - fCA
-		vCAP_mag = np.linalg.norm(fP - fCA)
-		R  = self.RotationMatrix(self.o, self.j, self.w)
-		R_ = np.linalg.inv(R)
-		RM = np.array([
-		[XA[0], XA[1], XA[2]],
-		[YA[0], YA[1], YA[2]],
-		[ZA[0], ZA[1], ZA[2]]])
-		RM_ = np.linalg.inv(RM)
-		fCA_phi = [0, d * math.cos(phi), d * math.sin(phi)]
-		C_ori = np.matmul(self.C - oriA, RM_)
-		F1_ori = np.matmul(F1 - oriA, RM_)
-		F2_ori = np.matmul(F2 - oriA, RM_)
-		fCA_x = np.matmul(fCA_phi, RM)
-		fCA_x = fCA_x + oriA
-		fCA_x = fCA_x - self.C
-		fCA_x = np.matmul(fCA_x, R_)
-		theta = math.atan2(fCA_x[1], fCA_x[0])
-		r = (a*b)/math.sqrt(a**2*math.sin(theta)**2 + b**2*math.cos(theta)**2)
-		fP_phi = np.array([r * math.cos(theta), r * math.sin(theta), 0])
-		fP_phi = np.matmul(fP_phi, R)
-		fP_phi = fP_phi + self.C
-		fP_phi = np.matmul(fP_phi - oriA, RM_)
-		vCAP_phi = fP_phi - fCA_phi
-		vCAP_phi_mag = np.linalg.norm(vCAP_phi)
-		T = theta * 180 / math.pi
-		if T < 0: T += 360.0
-		if T == 0.0: T = 360.0
+		phi, psi, PHI, PSI = math.radians(phi), math.radians(psi), phi, psi
+		PoriA, PXA, PYA, PZA = self.AminoAcidOri(ori='PHI')
+		dp = 3.1870621267869894
+		ds = 0.9526475062940741
+		fCA = PoriA + PYA * dp
+		PRM = np.array([
+		[PXA[0], PXA[1], PXA[2]],
+		[PYA[0], PYA[1], PYA[2]],
+		[PZA[0], PZA[1], PZA[2]]])
+		PRM_ = np.linalg.inv(PRM)
+		fCA_phi = [0, dp * math.cos(phi), dp * math.sin(phi)]
+		fCA_phi = np.matmul(fCA_phi, PRM) + PoriA
+		SoriA, SXA, SYA, SZA = self.AminoAcidOri(ori='PSI')
+		transO = SoriA - fCA
+		SoriA = fCA_phi + transO
+		CA = self.pose.GetAtom(self.i, 'CA')
+		SXA = SoriA - CA
+		SXA = SXA / np.linalg.norm(SXA)
+		SZA = np.cross(SYA, SXA)
+		SZA = SZA / np.linalg.norm(SZA)
+		SRM = np.array([
+		[SXA[0], SXA[1], SXA[2]],
+		[SYA[0], SYA[1], SYA[2]],
+		[SZA[0], SZA[1], SZA[2]]])
+		SRM_ = np.linalg.inv(SRM)
+		fCA_psi = [0, ds * math.cos(psi), ds * math.sin(psi)]
+		fCA_psi = np.matmul(fCA_psi, SRM) + SoriA
+		fCA = fCA_psi
+		fT, fP, _, fd, fr = self.project(fCA)
 		if plot:
-			self.export(oriA, 'N', 'Amino Acid Origin')
-			XA = [XA[0]+oriA[0], XA[1]+oriA[1], XA[2]+oriA[2]]
-			YA = [YA[0]+oriA[0], YA[1]+oriA[1], YA[2]+oriA[2]]
-			ZA = [ZA[0]+oriA[0], ZA[1]+oriA[1], ZA[2]+oriA[2]]
-			self.export(XA, 'I', 'Amino Acid X-axis')
-			self.export(YA, 'I', 'Amino Acid Y-axis')
-			self.export(ZA, 'I', 'Amino Acid Z-axis')
-			X, Y, Z = [1, 0, 0], [0, 1, 0], [0, 0, 1]
-			self.export([0, 0, 0], 'C', 'Global Origin')
-			self.export(X, 'H', 'Global X-axis')
-			self.export(Y, 'H', 'Global Y-axis')
-			self.export(Z, 'H', 'Global Z-axis')
-			self.export(C_ori, 'S', 'C_ori')
-			self.export(F1_ori, 'O', 'F1_ori')
-			self.export(F2_ori, 'O', 'F2_ori')
-			self.export(fCA, 'S', 'fCA')
-			self.export(fP, 'I', 'fP')
-			self.export(fCA_phi, 'S', f'fCA_phi_{PHI}')
-			self.export(fP_phi, 'I', f'fP_phi_{PHI}')
-			R = self.RotationMatrix(self.o, self.j, self.w)
-			for x in np.arange(-a, a, 1):
-				y2 = (1 - x**2/a**2) * b**2
-				yt =  math.sqrt(y2)
-				yb = -math.sqrt(y2)
-				ut = np.array(self.C) - np.array([x, yt, 0])
-				ub = np.array(self.C) - np.array([x, yb, 0])
-				ut = self.C - ut
-				ub = self.C - ub
-				ut = np.matmul(ut, R)
-				ub = np.matmul(ub, R)
-				ut = self.C + ut
-				ub = self.C + ub
-				pt = np.matmul(ut - oriA, RM_)
-				pb = np.matmul(ub - oriA, RM_)
-				self.export(pt, 'H', f't{x}')
-				self.export(pb, 'H', f'b{x}')
-		return(T, vCAP_phi_mag)
+			self.export(fCA, 'S', f'fCA_{PHI}_{PSI}')
+			self.export(fP, 'I', f'fP_{PHI}_{PSI}')
+		return(fT, fP, fd, fr)
 	def SnR(self, start, F1, F2, e):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
-		oriA, XA, YA, ZA = self.AminoAcidOri()
-		d = 3.1870621267869894
+		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
+		d = 0.9526475062940741
 		fCA = oriA + YA * d
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
 		T, P, _, d, radius = self.project(CA)
+		fT, fP, _, fd, radius = self.project(fCA)
 		###########################
 		##### Reward Function #####
 		###########################
@@ -359,7 +342,7 @@ class MolecularTetris():
 		if F1CA > F1P and F2CA > F2P: R += 1
 		else:                         R -= 1
 		# Reward for going around ellipse clockwise
-		if T < 180: self.switch = 1
+		if T < 180 and self.i != 0: self.switch = 1
 		if   self.switch == 0 and self.F1P < F1P: R += 1
 		elif self.switch == 1 and self.F1P > F1P: R += 1
 		else:                                     R -= 1
@@ -371,23 +354,31 @@ class MolecularTetris():
 		if   (self.i % 2) != 0: OE = 0
 		elif (self.i % 2) == 0: OE = 1
 		# Determine which action leads to lowest fT and which to lowest fd
-		Ts, ds = {}, {}
-		for action in range(self.action_space.n):
-			phi = self.get_angle_meanings(action)
-			fT, fd = self.future(phi=phi, F1=F1, F2=F2)
-			Ts[action] = fT
-			ds[action] = fd
-		min_fT_a = [key for key in Ts if Ts[key] == min(Ts.values())][0]
-		min_fd_a = [key for key in Ts if ds[key] == min(ds.values())][0]
-		min_fT_v = Ts[min_fT_a]
-		min_fd_v = ds[min_fd_a]
+		Ts, ds = defaultdict(list), defaultdict(list)
+		for PHI in range(self.action_space.n):
+			phi = self.get_angle_meanings(PHI)
+			for PSI in range(self.action_space.n):
+				psi = self.get_angle_meanings(PSI)
+				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
+				Ts[fT].append(PHI)
+				Ts[fT].append(PSI)
+				ds[fd].append(PHI)
+				ds[fd].append(PSI)
+		min_fT_v = min(Ts.keys())
+		min_fT_aP = Ts[min_fT_v][0]
+		min_fT_aS = Ts[min_fT_v][1]
+		min_fd_v = min(ds.keys())
+		min_fd_aP = ds[min_fd_v][0]
+		min_fd_aS = ds[min_fd_v][1]
 		# Distance to closure
-		D = fCA - self.pose.GetAtom(0, 'C')
+		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
 		if self.switch == 0:
-			D = 1e3
+			C_term = 1e3
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			min_fT_a, min_fT_v, min_fd_a, min_fd_v. D])
+			min_fT_aP, min_fT_aS, min_fT_v,
+			min_fd_aP, min_fd_aS, min_fd_v,
+			C_term])
 		###########################
 		### End State Condition ###
 		###########################
@@ -404,14 +395,14 @@ class MolecularTetris():
 			St = True
 			# Reward at this end state only
 			R = self.i - 20
-		# End game if N-term to C-term distance < 1.5
-		N_term = self.pose.GetAtom(0, 'N')
-		C_term = self.pose.GetAtom(self.i, 'C')
-		vNC = C_term - N_term
-		distance = np.linalg.norm(vNC)
-		if distance < 1.5:
-			St = True
-			R = len(self.pose.data['Amino Acids'])/20
+#		# End game if N-term to C-term distance < 1.5
+#		N_term = self.pose.GetAtom(0, 'N')
+#		C_term = self.pose.GetAtom(self.i, 'C')
+#		vNC = C_term - N_term
+#		distance = np.linalg.norm(vNC)
+#		if distance < 1.5:
+#			St = True
+#			R = len(self.pose.data['Amino Acids'])/20
 		###########################
 		####### Extra Info ########
 		###########################
@@ -420,7 +411,7 @@ class MolecularTetris():
 
 def play(show=True):
 	''' Manually play the game '''
-	print('\n' + '='*95)
+	print('\n' + '='*65)
 	print('''\
 	╔╦╗┌─┐┬  ┌─┐┌─┐┬ ┬┬  ┌─┐┬─┐  ╔╦╗┌─┐┌┬┐┬─┐┬┌─┐
 	║║║│ ││  ├┤ │  │ ││  ├─┤├┬┘   ║ ├┤  │ ├┬┘│└─┐
@@ -436,19 +427,22 @@ def play(show=True):
 	   5               3       H-N         +   |
 	                             |          +  F1
 	           4                              +\n''')
-	print('='*95)
+	print('='*65)
 	seed = input('\nChoose a seed value, empty for a random seed, q to quit > ')
 	if    seed == '': seed = None
 	elif  seed == 'q': exit()
 	else: seed = int(seed)
-	print('\n' + '-'*95)
-	print(' '*25, 'Features', ' '*50, 'Reward')
-	print('-'*85 + '|' + '-'*9)
+	print('\n' + '-'*170)
+	print(' '*55, 'Features', ' '*95, 'Reward')
+	print('-'*160 + '|' + '-'*9)
 	env = MolecularTetris()
 	env.seed(seed)
 	obs = env.reset()
 	n = env.observation_space.shape[0] - 1
-	types = ['e', 'i', 'OE', 'T', 'mag', 'Switch', 'Ta', 'Tv', 'Da', 'Dv']
+	types = ['e', 'i', 'OE', 'T', 'mag', 'Switch',
+			'Ta-phi', 'Ta-psi', 'Tv',
+			'Da-phi', 'Da-psi', 'Dv',
+			'C-term']
 	title = ''
 	for F in types: title += '{:<{}}'.format(F, n)
 	print(title)
@@ -460,25 +454,28 @@ def play(show=True):
 	As = [x for x in range(env.action_space.n)]
 	actions = []
 	while (St == False):
-		inp = input('Action [0, 7] q to quit > ')
+		inp = input('Actions [0-7, 0-7] no space, q to quit > ')
 		if inp == 'q': exit()
-		try: inp = int(inp)
+		try: inp1 = int(inp[0]) ; inp2 = int(inp[1])
 		except: print('incorrect input') ; continue
-		if inp not in As: print('incorrect input') ; continue
-		actions.append(inp)
-		obs = env.step(inp)
+		if inp1 not in As: print('incorrect input') ; continue
+		if inp2 not in As: print('incorrect input') ; continue
+		inp = [inp1, inp2]
+		if not isinstance(inp, list): print('incorrect input') ; continue
+		actions.append([inp[0], inp[1]])
+		obs = env.step([inp[0], inp[1]])
 		R = round(obs[1], 3)
 		output = ''
 		for F in obs[0]: F = round(F, 1) ; output += '{:<{}}'.format(F, n)
-		output += '  {:<5}'.format(R)
+		output += ' '*7 + '{:<5}'.format(R)
 		print(output)
 		Gt.append(R)
 		St = obs[2]
-	print('='*95)
+	print('='*170)
 	print('Actions:', actions)
 	print('-'*20)
 	print('Total Reward =', sum(Gt))
-	if show: env.render(show=True, save=False)
+	if show: env.render()
 
 ################################################################################
 ################################################################################
@@ -504,8 +501,8 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	features = env.observation_space.shape
 	actions  = env.action_space.n
 	# 1. Setup the training and testing environments
-	train = SubprocVectorEnv([lambda:env for _ in range(350)]) # max possible on HPC
-	tests = SubprocVectorEnv([lambda:env for _ in range(150)]) # max possible on HPC
+	train = SubprocVectorEnv([lambda:env for _ in range(350)])
+	tests = SubprocVectorEnv([lambda:env for _ in range(150)])
 	# 2. Setup neural networks and policy - PPO
 	net = Net(features, hidden_sizes=[64, 64, 64], device=device)
 	actor = Actor(net, actions, device=device).to(device)
@@ -549,7 +546,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=3000)
+	elif args.rl_train: RL(epochs=1000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
