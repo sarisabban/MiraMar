@@ -27,8 +27,8 @@ class MolecularTetris():
 	def __init__(self):
 		''' Initialise global variables '''
 		self.observation_space = Box(
-			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, 0   ]),
-			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50, 1000]),
+			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, -50]),
+			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50,  50]),
 			dtype=np.float32)
 		self.action_space = Discrete(8)
 		self.n = None
@@ -230,8 +230,8 @@ class MolecularTetris():
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
 		AA  = 'G'
-		phi = self.get_angle_meanings(action[0])
-		psi = self.get_angle_meanings(action[1])
+		phi = self.get_angle_meanings(action)#[0])
+		psi = 180#self.get_angle_meanings(action[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -362,16 +362,15 @@ class MolecularTetris():
 				Ts[fT].append(PSI)
 				ds[fd].append(PHI)
 				ds[fd].append(PSI)
-		min_fT_v = min(Ts.keys())
+		min_fT_v  = min(Ts.keys())
 		min_fT_aP = Ts[min_fT_v][0]
 		min_fT_aS = Ts[min_fT_v][1]
-		min_fd_v = min(ds.keys())
+		min_fd_v  = min(ds.keys())
 		min_fd_aP = ds[min_fd_v][0]
 		min_fd_aS = ds[min_fd_v][1]
-		# Distance to closure
+		# Distance to C-term for loop closure
 		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
-		if self.switch == 0:
-			C_term = 1e3
+		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
 			min_fT_aP, min_fT_aS, min_fT_v,
@@ -381,8 +380,9 @@ class MolecularTetris():
 		### End State Condition ###
 		###########################
 		St = False
-		# St1 - If polypeptide reaches 20 amino acids
-		if self.i >= 20:
+		# St1 - If polypeptide reaches max amino acids
+		MAX = 20
+		if self.i >= MAX:
 			St = True
 		# St2 - End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
@@ -392,15 +392,15 @@ class MolecularTetris():
 		if 1 in CHECK:
 			St = True
 			# Rt - Reward at this end state only
-			R = self.i - 20
-#		# End game if N-term to C-term distance < 1.5
+			R = self.i - MAX
+#		# End game if N-term to C-term distance < 1.5 ###### CAUSES pre-mature chain termination,,, why????
 #		N_term = self.pose.GetAtom(0, 'N')
 #		C_term = self.pose.GetAtom(self.i, 'C')
 #		vNC = C_term - N_term
 #		distance = np.linalg.norm(vNC)
 #		if distance < 1.5:
 #			St = True
-#			R = len(self.pose.data['Amino Acids'])/20
+#			R = len(self.pose.data['Amino Acids'])/MAX
 		###########################
 		####### Extra Info ########
 		###########################
@@ -437,9 +437,9 @@ def play(show=True):
 	env.seed(seed)
 	obs = env.reset()
 	n = env.observation_space.shape[0] - 1
-	types = ['e', 'i', 'OE', 'T', 'mag', 'Switch',
-			'Ta-phi', 'Ta-psi', 'Tv',
-			'Da-phi', 'Da-psi', 'Dv',
+	types = ['e', 'i', 'OE', 'T', 'd', 'Switch',
+			'Ta-phi', 'Ta-psi', 'fT',
+			'da-phi', 'da-psi', 'fd',
 			'C-term']
 	title = ''
 	for F in types: title += '{:<{}}'.format(F, n)
@@ -528,7 +528,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 			episode_per_test=10,
 			repeat_per_collect=10,
 			batch_size=256,
-			stop_fn=lambda mean_reward: mean_reward >= 50)
+			stop_fn=lambda mean_reward: mean_reward >= 10)
 		print(result)
 		# 6. Save policy
 		torch.save(policy.state_dict(), filename)
@@ -547,4 +547,7 @@ def main():
 	elif args.rl_train: RL(epochs=1000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
+######
+###### PSI turned OFF
+######
 if __name__ == '__main__': main()
