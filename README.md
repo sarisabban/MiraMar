@@ -44,8 +44,8 @@ The **rewards** are as follows:
 The **stop condition** are as follows:
 | Condition                     | Name | Values | Description           |
 |-------------------------------|------|--------|-----------------------|
-|Polypeptide length of i=20     |St1   |R=0     |The polypeptide can only reach a maximum length of 20 amino acids|
-|Self circle                    |St2   |R=i - 20|If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Polypeptide length of i=20     |St1   |0     |The polypeptide can only reach a maximum length of 20 amino acids|
+|Self circle                    |St2   |i - 20|If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 
 ## How to use:
 `pip install numpy gym pytorch tainshou`
