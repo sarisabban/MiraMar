@@ -22,14 +22,14 @@ The **features** are as follows:
 |Index of step                           |i     |[0, 15]   |The index of the state step|
 |Odd/Even of step                        |OE    |[0, 1]    |Whether the step is even or odd value|
 |Angle of Cα                             |T     |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα                          |mag   |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
+|Distance of Cα                          |d     |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
 |Switch                                  |Switch|[0, 1]    |The point where the chain switchs from moving away from the start position the returning back|
 |Phi angle action for lowest angle T     |Ta-phi|[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
 |Psi angle action for lowest angle T     |Ta-psi|[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
-|Resulting angle T                       |Tv    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
-|Phi angle action for lowest distance mag|Da-phi|[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
-|Psi angle action for lowest distance mag|Da-psi|[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
-|Resulting distance mag                  |Dv    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
+|Resulting angle T                       |fT    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
+|Phi angle action for lowest distance mag|da-phi|[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
+|Psi angle action for lowest distance mag|da-psi|[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
+|Resulting distance mag                  |fd    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
 |Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
