@@ -373,15 +373,19 @@ class MolecularTetris():
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			min_fT_aP, min_fT_aS, min_fT_v,
-			min_fd_aP, min_fd_aS, min_fd_v,
+			min_fT_aP,
+			min_fT_aS,
+			min_fT_v,
+			min_fd_aP,
+			min_fd_aS,
+			min_fd_v,
 			C_term])
 		###########################
 		### End State Condition ###
 		###########################
 		St = False
 		# St1 - If polypeptide reaches max amino acids
-		MAX = 20
+		MAX = 15
 		if self.i >= MAX:
 			St = True
 		# St2 - End game if the chain made a circle onto itself
@@ -522,13 +526,13 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 			policy,
 			train_collector,
 			tests_collector,
-			step_per_epoch=50000,
+			step_per_epoch=100000,
 			max_epoch=epochs,
 			step_per_collect=20,
 			episode_per_test=10,
 			repeat_per_collect=10,
 			batch_size=256,
-			stop_fn=lambda mean_reward: mean_reward >= 10)
+			stop_fn=lambda mean_reward: mean_reward >= 20)
 		print(result)
 		# 6. Save policy
 		torch.save(policy.state_dict(), filename)
@@ -544,7 +548,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=1000)
+	elif args.rl_train: RL(epochs=200)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 ######
