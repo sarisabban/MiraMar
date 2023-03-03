@@ -30,7 +30,7 @@ class MolecularTetris():
 			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, -50]),
 			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50,  50]),
 			dtype=np.float32)
-		self.action_space = Discrete(8)
+		self.action_space = MultiDiscrete([8, 8])
 		self.n = None
 	def get_angle_meanings(self, action):
 		''' Definition of each action's angle '''
@@ -230,8 +230,8 @@ class MolecularTetris():
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
 		AA  = 'G'
-		phi = self.get_angle_meanings(action)#[0])
-		psi = 180#self.get_angle_meanings(action[1])
+		phi = self.get_angle_meanings(action[0])
+		psi = self.get_angle_meanings(action[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -353,9 +353,9 @@ class MolecularTetris():
 		elif (self.i % 2) == 0: OE = 1
 		# Determine which action leads to lowest fT and which to lowest fd
 		Ts, ds = defaultdict(list), defaultdict(list)
-		for PHI in range(self.action_space.n):
+		for PHI in range(8):#self.action_space.high[0]):
 			phi = self.get_angle_meanings(PHI)
-			for PSI in range(self.action_space.n):
+			for PSI in range(8):#self.action_space.high[1]):
 				psi = self.get_angle_meanings(PSI)
 				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
 				Ts[fT].append(PHI)
@@ -373,12 +373,8 @@ class MolecularTetris():
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			min_fT_aP,
-			min_fT_aS,
-			min_fT_v,
-			min_fd_aP,
-			min_fd_aS,
-			min_fd_v,
+			min_fT_aP, min_fT_aS, min_fT_v,
+			min_fd_aP, min_fd_aS, min_fd_v,
 			C_term])
 		###########################
 		### End State Condition ###
@@ -490,9 +486,9 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	import torch
 	import tianshou
 	from torch import nn
-	from tianshou.policy import PPOPolicy, DQNPolicy
+	from tianshou.policy import PPOPolicy, DQNPolicy, BranchingDQNPolicy
 	from tianshou.utils.net.discrete import Actor, Critic
-	from tianshou.utils.net.common import ActorCritic, Net
+	from tianshou.utils.net.common import ActorCritic, Net, BranchingNet
 	from tianshou.env import DummyVectorEnv, SubprocVectorEnv
 	from tianshou.data import Collector, VectorReplayBuffer, Batch
 	from tianshou.trainer import onpolicy_trainer, offpolicy_trainer
@@ -501,20 +497,23 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	# 0. Get information about the environment
 	env = MolecularTetris()
 	features = env.observation_space.shape
-	actions  = env.action_space.n
+	actions = env.action_space.shape
 	# 1. Setup the training and testing environments
 	train = SubprocVectorEnv([lambda:env for _ in range(350)])
 	tests = SubprocVectorEnv([lambda:env for _ in range(150)])
 	# 2. Setup neural networks and policy - PPO
-	net = Net(features, hidden_sizes=[64, 64, 64], device=device)
-	actor = Actor(net, actions, device=device).to(device)
-	critic = Critic(net, device=device).to(device)
-	actor_critic = ActorCritic(actor, critic)
-	optim = torch.optim.Adam(actor_critic.parameters(), lr=1e-4)
-	dist = torch.distributions.Categorical
-	policy = PPOPolicy( \
-	actor, critic, optim, dist, action_space=env.action_space, \
-	deterministic_eval=True)
+	net = BranchingNet(
+		state_shape=features,
+		num_branches=actions[0],
+		common_hidden_sizes=[128, 128, 128],
+		device=device).to(device)
+	optim = torch.optim.Adam(net.parameters(), lr=1e-4)
+	policy = BranchingDQNPolicy(
+		net,
+		optim,
+		discount_factor=0.9,
+		estimation_step=1,
+		target_update_freq=320)
 	# 3. Setup vectorised replay buffer
 	VRB = VectorReplayBuffer(20000, len(train))
 	# 4. Setup collectors
@@ -522,11 +521,11 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	tests_collector = Collector(policy, tests)
 	if not play:
 		# 5. Train
-		result = onpolicy_trainer(
+		result = offpolicy_trainer(
 			policy,
 			train_collector,
 			tests_collector,
-			step_per_epoch=100000,
+			step_per_epoch=50000,
 			max_epoch=epochs,
 			step_per_collect=20,
 			episode_per_test=10,
@@ -548,10 +547,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=200)
+	elif args.rl_train: RL(epochs=100)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
-######
-###### PSI turned OFF
-######
 if __name__ == '__main__': main()
