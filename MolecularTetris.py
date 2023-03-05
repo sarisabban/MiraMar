@@ -393,14 +393,14 @@ class MolecularTetris():
 			St = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
-#		# End game if N-term to C-term distance < 1.5 ###### CAUSES pre-mature chain termination,,, why????
-#		N_term = self.pose.GetAtom(0, 'N')
-#		C_term = self.pose.GetAtom(self.i, 'C')
-#		vNC = C_term - N_term
-#		distance = np.linalg.norm(vNC)
-#		if distance < 1.5:
-#			St = True
-#			R = len(self.pose.data['Amino Acids'])/MAX
+		# End game if N-term to C-term distance < 1.5
+		N_term = self.pose.GetAtom(0, 'N')
+		C_term = self.pose.GetAtom(self.i, 'C')
+		vNC = C_term - N_term
+		distance = np.linalg.norm(vNC)
+		if distance < 1.5:
+			St = True
+			R = len(self.pose.data['Amino Acids'])/MAX
 		###########################
 		####### Extra Info ########
 		###########################
@@ -547,7 +547,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 
 def main():
 	if   args.play:     play()
-	elif args.rl_train: RL(epochs=1000)
+	elif args.rl_train: RL(epochs=100)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
