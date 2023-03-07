@@ -43,8 +43,11 @@ The **rewards** are as follows:
 |Loop closure                   |Rtc   |n / N                    |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
 
 > __Note__
+> 
 > i is the current index of the amino acid
+> 
 > n is current the final size of the built polypeptide.
+> 
 > N is largest size of a polypeptide allowed by the game (20 amino acids).
 
 The **stop condition** are as follows:
