@@ -40,7 +40,6 @@ The **rewards** are as follows:
 |Cα outside/inside ellipse      |R3    |±1                        |If the Cα is outside the ellipse +1|
 |Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Pre-mature end                 |Rt    |i - N                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
-
 |Pre-mature end                 |Rtc   |n / N                    |If N-term to C-term distance < 1.5 Å the game will end and reward is given, shorter polypeptide gives larger reward|
 
 > __Note__
