@@ -44,11 +44,11 @@ The **rewards** are as follows:
 
 > __Note__
 > 
-> i is the current index of the amino acid
+> **i** is the current index of the amino acid
 > 
-> n is current the final size of the built polypeptide.
+> **n** is current the final size of the built polypeptide.
 > 
-> N is largest size of a polypeptide allowed by the game (20 amino acids).
+> **N** is largest size of a polypeptide allowed by the game (20 amino acids).
 
 The **stop condition** are as follows:
 | Condition                     | Name | Values | Description           |
