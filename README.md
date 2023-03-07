@@ -39,7 +39,13 @@ The **rewards** are as follows:
 |Cα Distance                    |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
 |Cα outside/inside ellipse      |R3    |±1                        |If the Cα is outside the ellipse +1|
 |Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
-|Pre-mature end                 |Rt    |i - 20                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Pre-mature end                 |Rt    |i - N                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+
+|Pre-mature end                 |Rtc   |n / N                    |If N-term to C-term distance < 1.5 Å the game will end and reward is given, shorter polypeptide gives larger reward|
+
+> __Note__
+n is current the final size of the built polypeptide.
+N is largest size of a polypeptide allowed by the game (20 amino acids).
 
 The **stop condition** are as follows:
 | Condition                     | Name | Values | Description           |
