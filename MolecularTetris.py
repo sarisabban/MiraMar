@@ -230,8 +230,8 @@ class MolecularTetris():
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
 		AA  = 'G'
-		phi = self.get_angle_meanings(action[0])
-		psi = self.get_angle_meanings(action[1])
+		phi = action[0]#self.get_angle_meanings(action[0])
+		psi = action[1]#self.get_angle_meanings(action[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -393,7 +393,7 @@ class MolecularTetris():
 			St = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
-		# End game if N-term to C-term distance < 1.5
+		# Rtc - End game if N-term to C-term distance < 1.5
 		N_term = self.pose.GetAtom(0, 'N')
 		C_term = self.pose.GetAtom(self.i, 'C')
 		vNC = C_term - N_term
