@@ -42,6 +42,12 @@ The **rewards** are as follows:
 |Pre-mature end                 |Rt    |i - N                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |Rtc   |n / N                    |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
 
+The **stop condition** are as follows:
+| Condition                     | Name | Values | Description           |
+|-------------------------------|------|--------|-----------------------|
+|Polypeptide length of i=20     |St1   |0     |The polypeptide can only reach a maximum length of 20 amino acids|
+|Self circle                    |St2   |i - 20|If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+
 > __Note__
 > 
 > **i** is the current index of the amino acid
@@ -49,12 +55,6 @@ The **rewards** are as follows:
 > **n** is current the final size of the built polypeptide.
 > 
 > **N** is largest size of a polypeptide allowed by the game (20 amino acids).
-
-The **stop condition** are as follows:
-| Condition                     | Name | Values | Description           |
-|-------------------------------|------|--------|-----------------------|
-|Polypeptide length of i=20     |St1   |0     |The polypeptide can only reach a maximum length of 20 amino acids|
-|Self circle                    |St2   |i - 20|If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 
 ## How to use:
 `pip install numpy gym pytorch tainshou`
