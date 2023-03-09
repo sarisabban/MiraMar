@@ -26,10 +26,10 @@ The **features** are as follows:
 |Switch                                  |Switch|[0, 1]    |The point where the chain switchs from moving away from the start position the returning back|
 |Phi angle action for lowest angle T     |Ta-phi|[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
 |Psi angle action for lowest angle T     |Ta-psi|[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
-|Resulting angle T                       |fT    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
+|Expected future angle T                 |fT    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
 |Phi angle action for lowest distance mag|da-phi|[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
 |Psi angle action for lowest distance mag|da-psi|[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
-|Resulting distance mag                  |fd    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
+|Expected future distance mag            |fd    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
 |Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
