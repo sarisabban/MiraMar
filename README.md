@@ -65,7 +65,7 @@ The **stop condition** are as follows:
 
 `python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
 
-`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (PPO using PyTorch and Tainshou).
+`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (DQN using PyTorch and Tainshou).
 
 `python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
 
