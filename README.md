@@ -70,3 +70,17 @@ The **stop condition** are as follows:
 `python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
 
 The output of the game play are two .pdb (protein databank) files called molecule.pdb and path.pdb. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
+
+To play by code:
+
+```
+env = MolecularTetris()
+print('Feature space:', env.observation_space)
+print('Action space:', env.action_space)
+env.seed(0)
+env.reset()
+env.step([4, 4])
+env.render() # env.render(show=False, save=True) to save rather than show the game output
+```
+
+
