@@ -46,7 +46,9 @@ The **stop condition** are as follows:
 | Condition                     | Name | Values | Description           |
 |-------------------------------|------|--------|-----------------------|
 |Polypeptide length of i=20     |St1   |0       |The polypeptide can only reach a maximum length of 20 amino acids|
-|Self circle                    |St2   |i - N   |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Self circle                    |St2   |Rt      |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Loop closure                   |St3   |Rtc     |If the N-term to C-term distance < 1.5 Å|
+
 
 > __Note__
 > 
