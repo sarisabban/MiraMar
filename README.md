@@ -7,7 +7,7 @@ A game to build cyclic polypeptides using reinforcement learning
 This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
 
 ## How to play:
-The goal is to build a cyclic polypeptide molecule, one amino acid at a time,going around the elliptical path.
+The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path.
 
 The **actions** are as follows:
 | Action   | Name | Values                                             |
