@@ -19,22 +19,21 @@ help='Manually play the game')
 parser.add_argument('-rl', '--rl_train', action='store_true',
 help='Train a reinforcement learning agent')
 parser.add_argument('-rlp', '--rl_play', nargs='+',
-help='Have an agent play the game using the policy file')
+help='Have a trained agent play the game using the policy file')
 args = parser.parse_args()
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
 	def __init__(self):
 		''' Initialise global variables '''
+		self.n, self.bins = None, 8
 		self.observation_space = Box(
 			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, -50]),
-			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50,  50]),
-			dtype=np.float32)
-		self.action_space = MultiDiscrete([8, 8])
-		self.n = None
+			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50,  50]))
+		self.action_space = MultiDiscrete([self.bins, self.bins])
 	def get_angle_meanings(self, action):
 		''' Definition of each action's angle '''
-		angles = {0:0, 1:45, 2:90, 3:135, 4:180, 5:225, 6:270, 7:315}
+		angles = {a: 360/self.bins * a for a in range(self.bins)}
 		return(angles[action])
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
@@ -153,20 +152,14 @@ class MolecularTetris():
 			remove = ['rm', 'molecule.pdb', 'path.pdb']
 		locate = shutil.which('pymol')
 		if show == True and save == True:
-			if locate == None:
-				print('PyMOL not installed')
-				return
+			if locate == None: print('PyMOL not installed') ; return
 			subprocess.run(display, capture_output=True)
 		elif show == True and save == False:
-			if locate == None:
-				print('PyMOL not installed')
-				return
+			if locate == None: print('PyMOL not installed') ; return
 			subprocess.run(display, capture_output=True)
 			subprocess.run(remove)
-		elif show == False and save == True:
-			return
-		elif show == False and save == False:
-			subprocess.run(remove)
+		elif show == False and save == True: return
+		elif show == False and save == False: subprocess.run(remove)
 	def export(self, P, atom, define):
 		''' Export specific point '''
 		with open('points.pdb', 'a') as F:
@@ -222,16 +215,14 @@ class MolecularTetris():
 		self.w = np.random.uniform(0, 90)
 		self.start, F1, F2, e = self.path()
 		self.addAA()
-		self.T = 360
-		self.F1P = 0
-		self.switch = 0
+		self.T, self.F1P, self.switch = 360, 0, 0
 		S, R, St, info, data = self.SnR(self.start, F1, F2, e)
 		return(S, data)
 	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
 		AA  = 'G'
-		phi = action[0]#self.get_angle_meanings(action[0])
-		psi = action[1]#self.get_angle_meanings(action[1])
+		phi = self.get_angle_meanings(action[0])
+		psi = self.get_angle_meanings(action[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -353,9 +344,9 @@ class MolecularTetris():
 		elif (self.i % 2) == 0: OE = 1
 		# Determine which action leads to lowest fT and which to lowest fd
 		Ts, ds = defaultdict(list), defaultdict(list)
-		for PHI in range(8):#self.action_space.high[0]):
+		for PHI in range(self.action_space[0].n):
 			phi = self.get_angle_meanings(PHI)
-			for PSI in range(8):#self.action_space.high[1]):
+			for PSI in range(self.action_space[1].n):
 				psi = self.get_angle_meanings(PSI)
 				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
 				Ts[fT].append(PHI)
@@ -393,14 +384,15 @@ class MolecularTetris():
 			St = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
-		# Rtc - End game if N-term to C-term distance < 1.5
+		# St3 - End game if N-term to C-term distance < 1.5
 		N_term = self.pose.GetAtom(0, 'N')
 		C_term = self.pose.GetAtom(self.i, 'C')
 		vNC = C_term - N_term
 		distance = np.linalg.norm(vNC)
 		if distance < 1.5:
 			St = True
-			R = len(self.pose.data['Amino Acids'])/MAX
+			# Rtc - Reward at this end state only
+			R = len(self.pose.data['Amino Acids']) / MAX
 		###########################
 		####### Extra Info ########
 		###########################
@@ -501,7 +493,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 	# 1. Setup the training and testing environments
 	train = SubprocVectorEnv([lambda:env for _ in range(350)])
 	tests = SubprocVectorEnv([lambda:env for _ in range(150)])
-	# 2. Setup neural networks and policy - PPO
+	# 2. Setup neural networks and policy - DQN
 	net = BranchingNet(
 		state_shape=features,
 		num_branches=actions[0],
