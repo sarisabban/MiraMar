@@ -1,5 +1,5 @@
 # MolecularTetris
-A game to build cyclic polypeptides using reinforcement learning 
+A game to build cyclic polypeptides using reinforcement learning.
 
 ![Alt Text](image.png)
 
