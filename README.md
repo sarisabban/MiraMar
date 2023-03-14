@@ -6,8 +6,32 @@ A game to build cyclic polypeptides using reinforcement learning.
 ## Description:
 This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
 
-## How to play:
+## How to use:
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path.
+
+`pip install numpy gym pytorch tainshou`
+
+`pip install git+https://github.com/sarisabban/Pose`
+
+`python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
+
+`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (DQN using PyTorch and Tainshou).
+
+`python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
+
+The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
+
+To play by code (standard gym setup):
+
+```
+env = MolecularTetris()
+print('Feature space:', env.observation_space)
+print('Action space:', env.action_space)
+env.seed(0)
+env.reset()
+env.step([4, 4])
+env.render() # env.render(show=False, save=True) to save rather than show the game output
+```
 
 The **actions** are as follows:
 | Action   | Name | Values                                             |
@@ -42,13 +66,12 @@ The **rewards** are as follows:
 |Pre-mature end                 |Rt    |i - N                    |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |Rtc   |n / N                    |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
 
-The **stop condition** are as follows:
+The **stop conditions** are as follows:
 | Condition                     | Name | Values | Description           |
 |-------------------------------|------|--------|-----------------------|
 |Polypeptide length of i=N     |St1   |0       |The polypeptide can only reach a maximum length of N amino acids|
 |Self circle                    |St2   |Rt      |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |St3   |Rtc     |If the N-term to C-term distance < 1.5 Å|
-
 
 > __Note__
 > 
@@ -56,31 +79,4 @@ The **stop condition** are as follows:
 > 
 > **n** is current the final size of the built polypeptide.
 > 
-> **N** is largest size of a polypeptide allowed by the game (15 amino acids).
-
-## How to use:
-`pip install numpy gym pytorch tainshou`
-
-`git clone https://github.com/sarisabban/Pose.git`
-
-`python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
-
-`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (DQN using PyTorch and Tainshou).
-
-`python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
-
-The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
-
-To play by code (standard gym setup):
-
-```
-env = MolecularTetris()
-print('Feature space:', env.observation_space)
-print('Action space:', env.action_space)
-env.seed(0)
-env.reset()
-env.step([4, 4])
-env.render() # env.render(show=False, save=True) to save rather than show the game output
-```
-
-
+> **N** is largest size of a polypeptide allowed by the game (20 amino acids).
