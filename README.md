@@ -25,7 +25,7 @@ To play by code (standard gym setup):
 
 ```
 env = MolecularTetris()
-print('Feature space:', env.observation_space)
+print('Observation space:', env.observation_space)
 print('Action space:', env.action_space)
 env.seed(0)
 env.reset()
