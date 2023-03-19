@@ -27,13 +27,14 @@ print('Observation space:', env.observation_space)
 print('Action space:', env.action_space)
 env.seed(0)
 env.reset()
-env.step([4, 4])
+env.step(4, [4, 4])
 env.render() # env.render(show=False, save=True) to save rather than show the game output
 ```
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
 |----------|------|--------------------------|
+|Amino Acid|AA    |Canonical and non-canonical D-amino acids and L-amino acids (52 actions)|
 |Phi angle |P     |0-359 angles (360 actions)|
 |Psi angle |S     |0-359 angles (360 actions)|
 
