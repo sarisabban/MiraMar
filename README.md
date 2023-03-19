@@ -9,9 +9,7 @@ This is a game designed using OpenAI's gym library that builds a cyclic polypept
 ## How to use:
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path.
 
-`pip install numpy gym pytorch tainshou`
-
-`pip install git+https://github.com/sarisabban/Pose`
+`pip install numpy gym pytorch tainshou git+https://github.com/sarisabban/Pose`
 
 `python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
 
