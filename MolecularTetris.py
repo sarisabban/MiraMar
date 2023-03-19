@@ -38,10 +38,17 @@ class MolecularTetris():
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
-				0:'A',   1:'C',  2:'D',  3:'E',  4:'F',
-				5:'G',   6:'H',  7:'I',  8:'K',  9:'L',
-				10:'M', 11:'N', 12:'P', 13:'Q', 14:'R',
-				15:'S', 16:'T', 17:'V', 18:'W', 19:'Y'}
+		0 :'A',  1:'B',  2:'C',  3:'D',  4:'E',
+		5 :'F',  6:'G',  7:'H',  8:'I',  9:'J',
+		10:'K', 11:'L', 12:'M', 13:'N', 14:'O',
+		15:'P', 16:'Q', 17:'R', 18:'S', 19:'T',
+		20:'U', 21:'V', 22:'W', 23:'X', 24:'Y',
+		25:'Z', 26:'a', 27:'b', 28:'c', 29:'d',
+		30:'e', 31:'f', 32:'g', 33:'h', 34:'i',
+		35:'j', 36:'k', 37:'l', 38:'m', 39:'n',
+		40:'o', 41:'p', 42:'q', 43:'r', 44:'s',
+		45:'t', 46:'u', 47:'v', 48:'w', 49:'x',
+		50:'y', 51:'z'}
 		return(residues[action])
 	def seed(self, n=None):
 		''' Change the game's random seed that initiates the environment '''
@@ -54,9 +61,9 @@ class MolecularTetris():
 		cy = math.cos(math.radians(thetaY))
 		sz = math.sin(math.radians(thetaZ))
 		cz = math.cos(math.radians(thetaZ))
-		Rx = np.array([[1,  0,   0], [0, cx, -sx], [0, sx,  cx]])
-		Ry = np.array([[ cy, 0, sy], [  0, 1,  0], [-sy, 0, cy]])
-		Rz = np.array([[cz, -sz, 0], [sz,  cz, 0], [0,    0, 1]])
+		Rx = np.array([[  1,  0,  0], [  0, cx,-sx], [  0, sx, cx]])
+		Ry = np.array([[ cy,  0, sy], [  0,  1,  0], [-sy,  0, cy]])
+		Rz = np.array([[ cz,-sz,  0], [ sz, cz,  0], [  0,  0,  1]])
 		R  = Rz.dot(Ry).dot(Rx)
 		return(R)
 	def path(self, path=False, axis=False):
@@ -135,8 +142,8 @@ class MolecularTetris():
 		with open('path.pdb', 'w') as F:
 			for i, p in enumerate(points):
 				if    i == 0: a, e, c = 'N', 'N', 'A' ; F.write('HEADER C\n')
-				elif  i == 1: a, e, c = 'O', 'O', 'A' ; F.write('HEADER F1\n')
-				elif  i == 2: a, e, c = 'O', 'O', 'A' ; F.write('HEADER F2\n')
+				elif  i == 1: a, e, c = 'S', 'S', 'A' ; F.write('HEADER F1\n')
+				elif  i == 2: a, e, c = 'S', 'S', 'A' ; F.write('HEADER F2\n')
 				elif  i == 3: a, e, c = 'H', 'H', 'B' ; F.write('HEADER Path\n')
 				else: a, e, c = 'H', 'H', 'B'
 				A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
@@ -202,6 +209,25 @@ class MolecularTetris():
 			for i, (p, s) in enumerate(zip(self.PHIs, self.PSIs)):
 				self.pose.Rotate(i, p, 'PHI')
 				self.pose.Rotate(i, s, 'PSI')
+	def targets(self, plot=False):
+		''' Randomly generate target points the side chains should reach '''
+		number = np.random.randint(3, 10)
+		points = []
+		for p in range(number):
+			x = np.random.randint(-1e4, 1e4)
+			y = np.random.randint(-1e4, 1e4)
+			z = np.random.randint(-1e4, 1e4)
+			v = np.array([x, y, z])
+			mag = np.linalg.norm(v)
+			nrm = v/mag
+			distance = np.random.randint(self.a + 1, self.a + 5)
+			point = nrm * distance
+			point = self.C - point
+			T, P, vP, vP_mag, r = self.project(point)
+			points.append((T, point))
+			if plot: self.export(point, 'O', f'target_{p}')
+		points.sort(key=lambda x: x[0], reverse=True)
+		self.targets = points
 	def reset(self):
 		''' Reset game '''
 		self.pose = None
@@ -215,18 +241,19 @@ class MolecularTetris():
 		self.w = np.random.uniform(0, 90)
 		self.start, F1, F2, e = self.path()
 		self.addAA()
+		self.targets(plot=True)
 		self.T, self.F1P, self.switch = 360, 0, 0
-		S, R, St, info, data = self.SnR(self.start, F1, F2, e)
+		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
 		return(S, data)
-	def step(self, action):
+	def step(self, action1, action2):
 		''' Play one step, add amino acid and define its phi/psi angles '''
-		AA  = 'G'
-		phi = self.get_angle_meanings(action[0])
-		psi = self.get_angle_meanings(action[1])
+		AA  = self.get_residue_meanings(action1)
+		phi = self.get_angle_meanings(action2[0])
+		psi = self.get_angle_meanings(action2[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
-		return(self.SnR(start, F1, F2, e))
+		return(self.SnR(start, F1, F2, e, AA))
 	def AminoAcidOri(self, ori='phi'):
 		''' Get amino acid origin and its axis '''
 		N  = self.pose.GetAtom(self.i, 'N')
@@ -268,7 +295,7 @@ class MolecularTetris():
 			Z_mag = np.linalg.norm(Z)
 			return(origin, X, Y, Z)
 	def future(self, phi=0, psi=0, F1=[0, 0, 0], F2=[0, 0, 0], plot=False):
-		''' For phi/psi angles return the distance of fCA and the angle of P '''
+		''' For phi and psi angles return the future angles and points '''
 		a, b = self.a, self.b
 		phi, psi, PHI, PSI = math.radians(phi), math.radians(psi), phi, psi
 		PoriA, PXA, PYA, PZA = self.AminoAcidOri(ori='PHI')
@@ -303,12 +330,56 @@ class MolecularTetris():
 			self.export(fCA, 'S', f'fCA_{PHI}_{PSI}')
 			self.export(fP, 'I', f'fP_{PHI}_{PSI}')
 		return(fT, fP, fd, fr)
-	def SnR(self, start, F1, F2, e):
+	def fT_fd(self, F1, F2):
+		''' Determine which action leads to lowest fT and which to lowest fd '''
+		Ts, ds = defaultdict(list), defaultdict(list)
+		for PHI in range(self.action_space[0].n):
+			phi = self.get_angle_meanings(PHI)
+			for PSI in range(self.action_space[1].n):
+				psi = self.get_angle_meanings(PSI)
+				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
+				Ts[fT].append(PHI)
+				Ts[fT].append(PSI)
+				ds[fd].append(PHI)
+				ds[fd].append(PSI)
+		min_fT_v  = min(Ts.keys())
+		min_fT_aP = Ts[min_fT_v][0]
+		min_fT_aS = Ts[min_fT_v][1]
+		min_fd_v  = min(ds.keys())
+		min_fd_aP = ds[min_fd_v][0]
+		min_fd_aS = ds[min_fd_v][1]
+		return(min_fT_v, min_fT_aP, min_fT_aS, min_fd_v, min_fd_aP, min_fd_aS)
+	def chi(self, AA, target):
+		''' Rotate all chi angels of an amino acid '''
+		CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
+		for chi in range(CHIs):
+			for value in range(360):
+				self.pose.Rotate(self.i, value, 'CHI', chi)
+				edge = self.pose.data['Coordinates'][-4]
+				distance = np.linalg.norm(target - edge)
+				if 2.7 < distance < 3.3:
+					return(True)
+	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
 		d = 0.9526475062940741
 		fCA = oriA + YA * d
+
+
+
+
+
+		# Target logic
+		hit = False
+		hit = self.chi(AA, self.targets[0][1])
+
+
+
+
+
+
+
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
 		T, P, _, d, radius = self.project(CA)
@@ -342,30 +413,14 @@ class MolecularTetris():
 		# Check if step is odd or even
 		if   (self.i % 2) != 0: OE = 0
 		elif (self.i % 2) == 0: OE = 1
-		# Determine which action leads to lowest fT and which to lowest fd
-		Ts, ds = defaultdict(list), defaultdict(list)
-		for PHI in range(self.action_space[0].n):
-			phi = self.get_angle_meanings(PHI)
-			for PSI in range(self.action_space[1].n):
-				psi = self.get_angle_meanings(PSI)
-				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
-				Ts[fT].append(PHI)
-				Ts[fT].append(PSI)
-				ds[fd].append(PHI)
-				ds[fd].append(PSI)
-		min_fT_v  = min(Ts.keys())
-		min_fT_aP = Ts[min_fT_v][0]
-		min_fT_aS = Ts[min_fT_v][1]
-		min_fd_v  = min(ds.keys())
-		min_fd_aP = ds[min_fd_v][0]
-		min_fd_aS = ds[min_fd_v][1]
+		# Determine lowest fT and lowest fd
+		fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v = self.fT_fd(F1, F2)
 		# Distance to C-term for loop closure
 		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			min_fT_aP, min_fT_aS, min_fT_v,
-			min_fd_aP, min_fd_aS, min_fd_v,
+			fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v,
 			C_term])
 		###########################
 		### End State Condition ###
@@ -523,7 +578,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 			episode_per_test=10,
 			repeat_per_collect=10,
 			batch_size=256,
-			stop_fn=lambda mean_reward: mean_reward >= 20)
+			stop_fn=lambda mean_reward: mean_reward >= 25)
 		print(result)
 		# 6. Save policy
 		torch.save(policy.state_dict(), filename)
@@ -543,3 +598,9 @@ def main():
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
+
+env = MolecularTetris()
+env.seed(0)
+env.reset()
+env.step(4, [4, 4])
+env.render(show=False, save=True)
