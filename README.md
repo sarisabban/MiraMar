@@ -36,8 +36,8 @@ env.render() # env.render(show=False, save=True) to save rather than show the ga
 The **actions** are as follows:
 | Action   | Name | Values                   |
 |----------|------|--------------------------|
-|Phi angle |P     |0-359 angels (360 actions)|
-|Psi angle |S     |0-359 angels (360 actions)|
+|Phi angle |P     |0-359 angles (360 actions)|
+|Psi angle |S     |0-359 angles (360 actions)|
 
 The **features** are as follows:
 | Feature                                | Name | Values   | Description           |
