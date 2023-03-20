@@ -209,25 +209,6 @@ class MolecularTetris():
 			for i, (p, s) in enumerate(zip(self.PHIs, self.PSIs)):
 				self.pose.Rotate(i, p, 'PHI')
 				self.pose.Rotate(i, s, 'PSI')
-	def targets(self, plot=False):
-		''' Randomly generate target points the side chains should reach '''
-		number = np.random.randint(3, 10)
-		points = []
-		for p in range(number):
-			x = np.random.randint(-1e4, 1e4)
-			y = np.random.randint(-1e4, 1e4)
-			z = np.random.randint(-1e4, 1e4)
-			v = np.array([x, y, z])
-			mag = np.linalg.norm(v)
-			nrm = v/mag
-			distance = np.random.randint(self.a + 1, self.a + 5)
-			point = nrm * distance
-			point = self.C - point
-			T, P, vP, vP_mag, r = self.project(point)
-			points.append((T, point))
-			if plot: self.export(point, 'O', f'target_{p}')
-		points.sort(key=lambda x: x[0], reverse=True)
-		self.targets = points
 	def reset(self):
 		''' Reset game '''
 		self.pose = None
@@ -241,13 +222,15 @@ class MolecularTetris():
 		self.w = np.random.uniform(0, 90)
 		self.start, F1, F2, e = self.path()
 		self.addAA()
+		self.mark = False
 		self.targets(plot=True)
 		self.T, self.F1P, self.switch = 360, 0, 0
 		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
 		return(S, data)
-	def step(self, action1, action2):
+#	def step(self, action1, action2):
+	def step(self, action2):
 		''' Play one step, add amino acid and define its phi/psi angles '''
-		AA  = self.get_residue_meanings(action1)
+		AA  = 'G' #self.get_residue_meanings(action1) ##################################### open action
 		phi = self.get_angle_meanings(action2[0])
 		psi = self.get_angle_meanings(action2[1])
 		self.addAA(AA, phi, psi)
@@ -357,33 +340,67 @@ class MolecularTetris():
 				self.pose.Rotate(self.i, value, 'CHI', chi)
 				edge = self.pose.data['Coordinates'][-4]
 				distance = np.linalg.norm(target - edge)
-				if 2.7 < distance < 3.3:
-					return(True)
+				if 0 < distance < 3.3: return(True)
+				else: return(False)
+		edge = self.pose.data['Coordinates'][-4]
+		distance = np.linalg.norm(target - edge)
+		if 0.0 < distance < 3.3: return(1)
+		else: return(2)
+	def targets(self, plot=False):
+		''' Randomly generate target points the side chains should reach '''
+		number = np.random.randint(3, 10)
+		points = []
+		for p in range(number):
+			x = np.random.randint(-1e4, 1e4)
+			y = np.random.randint(-1e4, 1e4)
+			z = np.random.randint(-1e4, 1e4)
+			v = np.array([x, y, z])
+			mag = np.linalg.norm(v)
+			nrm = v/mag
+			distance = np.random.randint(self.a + 1, self.a + 5)
+			point = nrm * distance
+			point = self.C - point
+			T, P, vP, vP_mag, r = self.project(point)
+			points.append((T, point))
+			if plot: self.export(point, 'O', f'target_{p}')
+		points.sort(key=lambda x: x[0], reverse=True)
+		self.targets = points
+	def target_logic(self, AA):
+		''' Rotating side chains and hitting targets '''
+		hit, direction, CA_t, C_t = 0, 0, 0, 0
+		CA = self.pose.GetAtom(self.i, 'CA')
+		C  = self.pose.GetAtom(self.i, 'C')
+		T, P, _, d, radius = self.project(CA)
+		Trgs = len(self.targets)
+		if Trgs != 0:
+			if self.mark == True:
+				self.targets.pop(0)
+				self.mark = False
+				hit = 3
+			target = self.targets[0][1]
+			tT = self.targets[0][0]
+			CA_t = np.linalg.norm(CA - target)
+			C_t = np.linalg.norm(C - target)
+			if tT > T and self.i != 0: self.mark = True
+			if CA_t < C_t: direction = 1
+			if CA_t <= 13.0 and direction == 1: hit = self.chi(AA, target)
+			if hit == 1:
+				self.targets.pop(0)
+				self.mark = False
+		return(hit, Trgs, direction, CA_t, C_t)
 	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
 		d = 0.9526475062940741
 		fCA = oriA + YA * d
-
-
-
-
-
-		# Target logic
-		hit = False
-		hit = self.chi(AA, self.targets[0][1])
-
-
-
-
-
-
-
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
+		C  = self.pose.GetAtom(self.i, 'C')
 		T, P, _, d, radius = self.project(CA)
 		fT, fP, _, fd, radius = self.project(fCA)
+		# Target logic
+		hit, Trgs, direction, CA_t, C_t = self.target_logic(AA) ######################## add features
 		###########################
 		##### Reward Function #####
 		###########################
@@ -407,6 +424,11 @@ class MolecularTetris():
 		elif self.switch == 1 and self.F1P > F1P: R += 1
 		else:                                     R -= 1
 		self.F1P = F1P
+		# Rr - Target rewards
+#		if   hit == 0: R += 0  # Too far
+#		elif hit == 1: R += 10 # Hit
+#		elif hit == 2: R -= 1  # No rotamers (wrong AA)    ############################ add rewards
+#		elif hit == 3: R -= 10 # Miss
 		###########################
 		######## Features #########
 		###########################
@@ -598,9 +620,3 @@ def main():
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
-
-env = MolecularTetris()
-env.seed(0)
-env.reset()
-env.step(4, [4, 4])
-env.render(show=False, save=True)
