@@ -62,14 +62,14 @@ The **rewards** are as follows:
 |Cα Distance                    |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
 |Cα outside/inside ellipse      |R3    |±1                        |If the Cα is outside the ellipse +1|
 |Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
-|Target rewards                 |Rr    |+10 hit -10 miss 0 else   |If the agent hits a target a +10 reward is given, if failed to hit target -10 penalty is given, if the target is too far away nothing is awarded nor penalised|
+|Target rewards                 |Rr    |+10 hit -10 miss 0 else   |If the agent hits a target a +10 reward is given, if failed to hit target because it chose the wrong amino acid or it passed the target without hitting it a -10 penalty is given, if the target is too far away nothing is awarded nor penalised|
 |Pre-mature end                 |Rt    |i - N                     |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |Rtc   |n / N                     |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Values | Description           |
 |-------------------------------|------|--------|-----------------------|
-|Polypeptide length of i=N     |St1   |0       |The polypeptide can only reach a maximum length of N amino acids|
+|Polypeptide length of i=N      |St1   |0       |The polypeptide can only reach a maximum length of N amino acids|
 |Self circle                    |St2   |Rt      |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |St3   |Rtc     |If the N-term to C-term distance < 1.5 Å|
 
