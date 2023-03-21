@@ -15,6 +15,7 @@ A game to build cyclic polypeptides using reinforcement learning.
         ACTIONS               /        +   |
    5               3       H-N         +   |
                              |          +  F1
+           4                              
 =============================================
 ```
 
