@@ -58,21 +58,24 @@ The **actions** are as follows:
 |Psi angle |S     |0-359 angles (360 actions)|
 
 The **features** are as follows:
-| Feature                                | Name | Values   | Description           |
-|----------------------------------------|------|----------|-----------------------|
-|Eccentricity                            |e     |[0, 1]    |Eccentricity of the ellipse|
-|Index of step                           |i     |[0, 15]   |The index of the state step|
-|Odd/Even of step                        |OE    |[0, 1]    |Whether the step is even or odd value|
-|Angle of Cα                             |T     |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα                          |d     |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
-|Switch                                  |Switch|[0, 1]    |The point where the chain switchs from moving away from the start position the returning back|
-|Phi angle action for lowest angle T     |Ta-phi|[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
-|Psi angle action for lowest angle T     |Ta-psi|[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
-|Expected future angle T                 |fT    |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
-|Phi angle action for lowest distance mag|da-phi|[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
-|Psi angle action for lowest distance mag|da-psi|[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
-|Expected future distance mag            |fd    |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
-|Distance to C-term                      |C-term|[0, 1000] |The distance from N-term to C-term (for loop closure)|
+| Feature                                | Name    | Values   | Description           |
+|----------------------------------------|---------|----------|-----------------------|
+|Eccentricity                            |e        |[0, 1]    |Eccentricity of the ellipse|
+|Index of step                           |i        |[0, 15]   |The index of the state step|
+|Odd/Even of step                        |OE       |[0, 1]    |Whether the step is even or odd value|
+|Angle of Cα                             |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
+|Distance of Cα                          |d        |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
+|Switch                                  |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
+|Phi angle action for lowest angle T     |Ta-phi   |[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
+|Psi angle action for lowest angle T     |Ta-psi   |[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
+|Expected future angle T                 |fT       |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
+|Phi angle action for lowest distance mag|da-phi   |[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
+|Psi angle action for lowest distance mag|da-psi   |[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
+|Expected future distance mag            |fd       |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
+|Distance to C-term                      |C-term   |[0, 1000] |The distance from N-term to C-term (for loop closure)|
+|Targets                                 |Trgs     |[3, 10]   |The number of reminaing targets|
+|Direction of target                     |direction|[0, 1]    |0 if target is away from side chain, 1 if target is in the same direction as the side chain|
+|Distabce to target                      |Ca_t     |[0, 13]   |Distabce from Cα to target|
 
 The **rewards** are as follows:
 | Reward                        | Name | Values                   | Description           |
