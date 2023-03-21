@@ -14,8 +14,6 @@ from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
 warnings.filterwarnings('ignore')
 
 parser = argparse.ArgumentParser(description='MolecularTetris Game')
-parser.add_argument('-p', '--play', action='store_true',
-help='Manually play the game')
 parser.add_argument('-rl', '--rl_train', action='store_true',
 help='Train a reinforcement learning agent')
 parser.add_argument('-rlp', '--rl_play', nargs='+',
@@ -28,9 +26,9 @@ class MolecularTetris():
 		''' Initialise global variables '''
 		self.n, self.bins = None, 8
 		self.observation_space = Box(
-			low=np.array( [0,  0, 0,   0, -50, 0, 0, 0,   0, 0, 0, -50, -50]),
-			high=np.array([1, 20, 1, 360,  50, 1, 7, 7, 360, 7, 7,  50,  50]))
-		self.action_space = MultiDiscrete([self.bins, self.bins])
+			low=np.array( [0, 0,0,  0,-50,0,0,0,  0,0,0,-50,-50, 3,0, 0]),
+			high=np.array([1,20,1,360, 50,1,7,7,360,7,7, 50, 50,10,1,13]))
+		self.action_space = MultiDiscrete([52, self.bins, self.bins])
 	def get_angle_meanings(self, action):
 		''' Definition of each action's angle '''
 		angles = {a: 360/self.bins * a for a in range(self.bins)}
@@ -254,12 +252,11 @@ class MolecularTetris():
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
 		return(S, data)
-#	def step(self, action1, action2):
-	def step(self, action2):
+	def step(self, action):
 		''' Play one step, add amino acid and define its phi/psi angles '''
-		AA  = 'G' #self.get_residue_meanings(action1) ##################################### open action
-		phi = self.get_angle_meanings(action2[0])
-		psi = self.get_angle_meanings(action2[1])
+		AA  = self.get_residue_meanings(action[0])
+		phi = self.get_angle_meanings(action[1])
+		psi = self.get_angle_meanings(action[2])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -343,9 +340,9 @@ class MolecularTetris():
 	def fT_fd(self, F1, F2):
 		''' Determine which action leads to lowest fT and which to lowest fd '''
 		Ts, ds = defaultdict(list), defaultdict(list)
-		for PHI in range(self.action_space[0].n):
+		for PHI in range(self.action_space[1].n):
 			phi = self.get_angle_meanings(PHI)
-			for PSI in range(self.action_space[1].n):
+			for PSI in range(self.action_space[2].n):
 				psi = self.get_angle_meanings(PSI)
 				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
 				Ts[fT].append(PHI)
@@ -410,7 +407,7 @@ class MolecularTetris():
 		T, P, _, d, radius = self.project(CA)
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
-		hit, Trgs, direction, CA_t = self.target_logic(AA) ######################## add features
+		hit, Trgs, direction, CA_t = self.target_logic(AA)
 		###########################
 		##### Reward Function #####
 		###########################
@@ -435,10 +432,10 @@ class MolecularTetris():
 		else:                                     R -= 1
 		self.F1P = F1P
 		# Rr - Target rewards
-#		if   hit == 0: R += 0  # Too far
-#		elif hit == 1: R += 10 # Hit
-#		elif hit == 2: R -= 1  # No rotamers (wrong AA)    ############################ add rewards
-#		elif hit == 3: R -= 10 # Miss
+		if   hit == 0: R += 0  # Too far
+		elif hit == 1: R += 10 # Hit
+		elif hit == 2: R -= 1  # No rotamers (wrong AA)
+		elif hit == 3: R -= 10 # Miss
 		###########################
 		######## Features #########
 		###########################
@@ -453,7 +450,7 @@ class MolecularTetris():
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
 			fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v,
-			C_term])
+			C_term, Trgs, direction, CA_t])
 		###########################
 		### End State Condition ###
 		###########################
@@ -557,8 +554,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.play:     play()
-	elif args.rl_train: RL(epochs=100)
+	if   args.rl_train: RL(epochs=100)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
