@@ -150,6 +150,15 @@ class MolecularTetris():
 				x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
 				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
 				F.write(Entry)
+		with open('path.pdb', 'a') as F:
+			F.write('HEADER Targets\n')
+			for i, point in enumerate(self.targetLST):
+				p = point[1]
+				a, e, c = 'O', 'O', 'C'
+				A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
+				x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
+				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
+				F.write(Entry)
 		self.pose.Export('{}.pdb'.format(filename))
 		if Path('points.pdb').exists():
 			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
@@ -209,6 +218,25 @@ class MolecularTetris():
 			for i, (p, s) in enumerate(zip(self.PHIs, self.PSIs)):
 				self.pose.Rotate(i, p, 'PHI')
 				self.pose.Rotate(i, s, 'PSI')
+	def targetS(self, plot=False):
+		''' Randomly generate target points the side chains should reach '''
+		number = np.random.randint(3, 10)
+		points = []
+		for p in range(number):
+			x = np.random.randint(-1e4, 1e4)
+			y = np.random.randint(-1e4, 1e4)
+			z = np.random.randint(-1e4, 1e4)
+			v = np.array([x, y, z])
+			mag = np.linalg.norm(v)
+			nrm = v/mag
+			distance = np.random.randint(self.a + 1, self.a + 5)
+			point = nrm * distance
+			point = self.C - point
+			T, P, vP, vP_mag, r = self.project(point)
+			points.append((T, point))
+			if plot: self.export(point, 'O', f'target_{p}')
+		points.sort(key=lambda x: x[0], reverse=True)
+		self.targetLST = points
 	def reset(self):
 		''' Reset game '''
 		self.pose = None
@@ -222,9 +250,8 @@ class MolecularTetris():
 		self.w = np.random.uniform(0, 90)
 		self.start, F1, F2, e = self.path()
 		self.addAA()
-		self.mark = False
-		self.targets(plot=True)
-		self.T, self.F1P, self.switch = 360, 0, 0
+		self.targetS()
+		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
 		return(S, data)
 #	def step(self, action1, action2):
@@ -346,48 +373,31 @@ class MolecularTetris():
 		distance = np.linalg.norm(target - edge)
 		if 0.0 < distance < 3.3: return(1)
 		else: return(2)
-	def targets(self, plot=False):
-		''' Randomly generate target points the side chains should reach '''
-		number = np.random.randint(3, 10)
-		points = []
-		for p in range(number):
-			x = np.random.randint(-1e4, 1e4)
-			y = np.random.randint(-1e4, 1e4)
-			z = np.random.randint(-1e4, 1e4)
-			v = np.array([x, y, z])
-			mag = np.linalg.norm(v)
-			nrm = v/mag
-			distance = np.random.randint(self.a + 1, self.a + 5)
-			point = nrm * distance
-			point = self.C - point
-			T, P, vP, vP_mag, r = self.project(point)
-			points.append((T, point))
-			if plot: self.export(point, 'O', f'target_{p}')
-		points.sort(key=lambda x: x[0], reverse=True)
-		self.targets = points
 	def target_logic(self, AA):
 		''' Rotating side chains and hitting targets '''
 		hit, direction, CA_t, C_t = 0, 0, 0, 0
-		CA = self.pose.GetAtom(self.i, 'CA')
-		C  = self.pose.GetAtom(self.i, 'C')
-		T, P, _, d, radius = self.project(CA)
-		Trgs = len(self.targets)
+		Trgs = len(self.targetLST)
 		if Trgs != 0:
+			CA = self.pose.GetAtom(self.i, 'CA')
+			C  = self.pose.GetAtom(self.i, 'C')
+			T, P, _, d, radius = self.project(CA)
 			if self.mark == True:
-				self.targets.pop(0)
+				self.targetLST.pop(0)
 				self.mark = False
 				hit = 3
-			target = self.targets[0][1]
-			tT = self.targets[0][0]
-			CA_t = np.linalg.norm(CA - target)
-			C_t = np.linalg.norm(C - target)
-			if tT > T and self.i != 0: self.mark = True
-			if CA_t < C_t: direction = 1
-			if CA_t <= 13.0 and direction == 1: hit = self.chi(AA, target)
-			if hit == 1:
-				self.targets.pop(0)
-				self.mark = False
-		return(hit, Trgs, direction, CA_t, C_t)
+			Trgs = len(self.targetLST)
+			if Trgs != 0:
+				target = self.targetLST[0][1]
+				tT = self.targetLST[0][0]
+				CA_t = np.linalg.norm(CA - target)
+				C_t = np.linalg.norm(C - target)
+				if tT > T and self.i != 0: self.mark = True
+				if CA_t < C_t: direction = 1
+				if CA_t <= 13.0 and direction == 1: hit = self.chi(AA, target)
+				if hit == 1:
+					self.targetLST.pop(0)
+					self.mark = False
+		return(hit, Trgs, direction, CA_t)
 	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
@@ -400,7 +410,7 @@ class MolecularTetris():
 		T, P, _, d, radius = self.project(CA)
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
-		hit, Trgs, direction, CA_t, C_t = self.target_logic(AA) ######################## add features
+		hit, Trgs, direction, CA_t = self.target_logic(AA) ######################## add features
 		###########################
 		##### Reward Function #####
 		###########################
@@ -475,74 +485,6 @@ class MolecularTetris():
 		###########################
 		info, data = None, {}
 		return(S, R, St, info, data)
-
-def play(show=True):
-	''' Manually play the game '''
-	print('\n' + '='*65)
-	print('''\
-	╔╦╗┌─┐┬  ┌─┐┌─┐┬ ┬┬  ┌─┐┬─┐  ╔╦╗┌─┐┌┬┐┬─┐┬┌─┐
-	║║║│ ││  ├┤ │  │ ││  ├─┤├┬┘   ║ ├┤  │ ├┬┘│└─┐
-	╩ ╩└─┘┴─┘└─┘└─┘└─┘┴─┘┴ ┴┴└─   ╩ └─┘ ┴ ┴└─┴└─┘
-	           0                            +
-	                                       +   C
-	   7          /    1         O-H       +  /|
-	             /               |        +  / |
-	            /              O=C        + /  |
-	6          0          2       \       +/   |
-	                             H-Ca-----P    |
-	        ACTIONS               /        +   |
-	   5               3       H-N         +   |
-	                             |          +  F1
-	           4                              +\n''')
-	print('='*65)
-	seed = input('\nChoose a seed value, empty for a random seed, q to quit > ')
-	if    seed == '': seed = None
-	elif  seed == 'q': exit()
-	else: seed = int(seed)
-	print('\n' + '-'*170)
-	print(' '*55, 'Features', ' '*95, 'Reward')
-	print('-'*160 + '|' + '-'*9)
-	env = MolecularTetris()
-	env.seed(seed)
-	obs = env.reset()
-	n = env.observation_space.shape[0] - 1
-	types = ['e', 'i', 'OE', 'T', 'd', 'Switch',
-			'Ta-phi', 'Ta-psi', 'fT',
-			'da-phi', 'da-psi', 'fd',
-			'C-term']
-	title = ''
-	for F in types: title += '{:<{}}'.format(F, n)
-	print(title)
-	output = ''
-	for F in obs[0]: F = round(F, 1) ; output += '{:<{}}'.format(F, n)
-	print(output)
-	Gt = []
-	St = False
-	As = [x for x in range(env.action_space.n)]
-	actions = []
-	while (St == False):
-		inp = input('Actions [0-7, 0-7] no space, q to quit > ')
-		if inp == 'q': exit()
-		try: inp1 = int(inp[0]) ; inp2 = int(inp[1])
-		except: print('incorrect input') ; continue
-		if inp1 not in As: print('incorrect input') ; continue
-		if inp2 not in As: print('incorrect input') ; continue
-		inp = [inp1, inp2]
-		if not isinstance(inp, list): print('incorrect input') ; continue
-		actions.append([inp[0], inp[1]])
-		obs = env.step([inp[0], inp[1]])
-		R = round(obs[1], 3)
-		output = ''
-		for F in obs[0]: F = round(F, 1) ; output += '{:<{}}'.format(F, n)
-		output += ' '*7 + '{:<5}'.format(R)
-		print(output)
-		Gt.append(R)
-		St = obs[2]
-	print('='*170)
-	print('Actions:', actions)
-	print('-'*20)
-	print('Total Reward =', sum(Gt))
-	if show: env.render()
 
 ################################################################################
 ################################################################################
