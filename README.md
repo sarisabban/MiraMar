@@ -46,7 +46,7 @@ print('Observation space:', env.observation_space)
 print('Action space:', env.action_space)
 env.seed(0)
 env.reset()
-env.step(4, [4, 4])
+env.step([4, 4, 4])
 env.render() # env.render(show=False, save=True) to save rather than show the game output
 ```
 
