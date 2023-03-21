@@ -1,5 +1,11 @@
 # MolecularTetris
 A game to build cyclic polypeptides using reinforcement learning.
+
+<p align="center"><img src="image.png" width="80%" height="80%" /></p>
+
+## Description:
+This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
+
 ```
 =============================================
 ╔╦╗┌─┐┬  ┌─┐┌─┐┬ ┬┬  ┌─┐┬─┐  ╔╦╗┌─┐┌┬┐┬─┐┬┌─┐
@@ -18,11 +24,6 @@ A game to build cyclic polypeptides using reinforcement learning.
            4                              
 =============================================
 ```
-
-![Alt Text](image.png)
-
-## Description:
-This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
 
 ## How to use:
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path.
