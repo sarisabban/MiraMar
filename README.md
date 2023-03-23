@@ -4,7 +4,7 @@ A game to build cyclic polypeptides using reinforcement learning.
 <p align="center"><img src="image.png" width="80%" height="80%" /></p>
 
 ## Description:
-This is a game designed using OpenAI's gym library that builds a cyclic polypeptide molecule.
+This is a game designed to be compatible with OpenAI's gym library that builds a cyclic polypeptide molecule.
 
 ```
 =============================================
@@ -26,7 +26,7 @@ This is a game designed using OpenAI's gym library that builds a cyclic polypept
 ```
 
 ## How to use:
-The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path.
+The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
 `pip install numpy gym pytorch tainshou git+https://github.com/sarisabban/Pose`
 
