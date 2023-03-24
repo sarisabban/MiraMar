@@ -26,8 +26,8 @@ class MolecularTetris():
 		''' Initialise global variables '''
 		self.n, self.bins = None, 8
 		self.observation_space = Box(
-			low=np.array( [0, 0,0,  0,-50,0,0,0,  0,0,0,-50,-50, 3,0, 0]),
-			high=np.array([1,20,1,360, 50,1,7,7,360,7,7, 50, 50,10,1,13]))
+			low=np.array( [0, 0,0,  0,-50,0,0,0,  0,0,0,-50,0,0, 0,-50, 3,0, 0]),
+			high=np.array([1,20,1,360, 50,1,7,7,360,7,7, 50,7,7,13, 50,10,1,13]))
 		self.action_space = MultiDiscrete([52, self.bins, self.bins])
 	def get_angle_meanings(self, action):
 		''' Definition of each action's angle '''
@@ -319,7 +319,8 @@ class MolecularTetris():
 		SoriA, SXA, SYA, SZA = self.AminoAcidOri(ori='PSI')
 		transO = SoriA - fCA
 		SoriA = fCA_phi + transO
-		CA = self.pose.GetAtom(self.i, 'CA')
+		CA  = self.pose.GetAtom(self.i, 'CA')
+		C   = self.pose.GetAtom(self.i, 'C')
 		SXA = SoriA - CA
 		SXA = SXA / np.linalg.norm(SXA)
 		SZA = np.cross(SYA, SXA)
@@ -333,29 +334,40 @@ class MolecularTetris():
 		fCA_psi = np.matmul(fCA_psi, SRM) + SoriA
 		fCA = fCA_psi
 		fT, fP, _, fd, fr = self.project(fCA)
+		if len(self.targetLST) != 0:
+			target = self.targetLST[0][1]
+			fCA_t = np.linalg.norm(fCA - target)
+			C_t = np.linalg.norm(C - target)
+			if fCA_t > C_t: fCA_t = 1e3
+		else: fCA_t = 0
 		if plot:
 			self.export(fCA, 'S', f'fCA_{PHI}_{PSI}')
 			self.export(fP, 'I', f'fP_{PHI}_{PSI}')
-		return(fT, fP, fd, fr)
+		return(fT, fP, fd, fr, fCA_t)
 	def fT_fd(self, F1, F2):
 		''' Determine which action leads to lowest fT and which to lowest fd '''
-		Ts, ds = defaultdict(list), defaultdict(list)
+		Ts, ds, Tr = defaultdict(list), defaultdict(list), defaultdict(list)
 		for PHI in range(self.action_space[1].n):
 			phi = self.get_angle_meanings(PHI)
 			for PSI in range(self.action_space[2].n):
 				psi = self.get_angle_meanings(PSI)
-				fT, fP, fd, fr = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
+				fT, fP, fd, fr, fCA_t = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
 				Ts[fT].append(PHI)
 				Ts[fT].append(PSI)
 				ds[fd].append(PHI)
 				ds[fd].append(PSI)
-		min_fT_v  = min(Ts.keys())
-		min_fT_aP = Ts[min_fT_v][0]
-		min_fT_aS = Ts[min_fT_v][1]
-		min_fd_v  = min(ds.keys())
-		min_fd_aP = ds[min_fd_v][0]
-		min_fd_aS = ds[min_fd_v][1]
-		return(min_fT_v, min_fT_aP, min_fT_aS, min_fd_v, min_fd_aP, min_fd_aS)
+				Tr[fCA_t].append(PHI)
+				Tr[fCA_t].append(PSI)
+		fT_v  = min(Ts.keys())
+		fT_aP = Ts[fT_v][0]
+		fT_aS = Ts[fT_v][1]
+		fd_v  = min(ds.keys())
+		fd_aP = ds[fd_v][0]
+		fd_aS = ds[fd_v][1]
+		Tr_v = min(Tr.keys())
+		Tr_aP = Tr[Tr_v][0]
+		Tr_aS = Tr[Tr_v][1]
+		return(fT_v, fT_aP, fT_aS, fd_v, fd_aP, fd_aS, Tr_v, Tr_aP, Tr_aS)
 	def chi(self, AA, target):
 		''' Rotate all chi angels of an amino acid '''
 		CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
@@ -443,13 +455,13 @@ class MolecularTetris():
 		if   (self.i % 2) != 0: OE = 0
 		elif (self.i % 2) == 0: OE = 1
 		# Determine lowest fT and lowest fd
-		fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v = self.fT_fd(F1, F2)
+		fT_aP,fT_aS,fT_v,fd_aP,fd_aS,fd_v,Tr_v,Tr_aP,Tr_aS = self.fT_fd(F1, F2)
 		# Distance to C-term for loop closure
 		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v,
+			fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v, Tr_aP, Tr_aS, Tr_v,
 			C_term, Trgs, direction, CA_t])
 		###########################
 		### End State Condition ###
