@@ -24,10 +24,12 @@ class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
 	def __init__(self):
 		''' Initialise global variables '''
-		self.n, self.bins = None, 8
+		self.n, self.bins = None, 360
 		self.observation_space = Box(
-			low=np.array( [0, 0,0,  0,-50,0,0,0,  0,0,0,-50,0,0, 0,-50, 3,0, 0]),
-			high=np.array([1,20,1,360, 50,1,7,7,360,7,7, 50,7,7,13, 50,10,1,13]))
+			low=np.array(
+			[0, 0,0,  0,-50,0,  0,  0,  0,  0,  0,-50,  0,  0, 0,-50, 3,0, 0]),
+			high=np.array(
+			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
 		self.action_space = MultiDiscrete([52, self.bins, self.bins])
 	def get_angle_meanings(self, action):
 		''' Definition of each action's angle '''
@@ -468,7 +470,7 @@ class MolecularTetris():
 		###########################
 		St = False
 		# St1 - If polypeptide reaches max amino acids
-		MAX = 15
+		MAX = 20
 		if self.i >= MAX:
 			St = True
 		# St2 - End game if the chain made a circle onto itself
@@ -566,7 +568,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.rl_train: RL(epochs=100)
+	if   args.rl_train: RL(epochs=3)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
