@@ -2,23 +2,17 @@ import os
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import sys
 import math
+import scipy
 import shutil
+import pathlib
 import argparse
 import warnings
+import itertools
 import subprocess
 import numpy as np
-from Pose.pose import *
-from pathlib import Path
-from collections import defaultdict
-from gym.spaces import Dict, Discrete, Box, Tuple, MultiDiscrete
+from pose import *
+from gym.spaces import Box, MultiDiscrete
 warnings.filterwarnings('ignore')
-
-parser = argparse.ArgumentParser(description='MolecularTetris Game')
-parser.add_argument('-rl', '--rl_train', action='store_true',
-help='Train a reinforcement learning agent')
-parser.add_argument('-rlp', '--rl_play', nargs='+',
-help='Have a trained agent play the game using the policy file')
-args = parser.parse_args()
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
@@ -160,7 +154,7 @@ class MolecularTetris():
 				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
 				F.write(Entry)
 		self.pose.Export('{}.pdb'.format(filename))
-		if Path('points.pdb').exists():
+		if pathlib.Path('points.pdb').exists():
 			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
 			remove = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
 		else:
@@ -177,7 +171,7 @@ class MolecularTetris():
 		elif show == False and save == True: return
 		elif show == False and save == False: subprocess.run(remove)
 	def export(self, P, atom, define):
-		''' Export specific point '''
+		''' Export a specific point '''
 		with open('points.pdb', 'a') as F:
 			F.write(f'HEADER {define}\n')
 			a, e, c = atom, atom, 'C'
@@ -255,7 +249,7 @@ class MolecularTetris():
 		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
 		return(S, data)
 	def step(self, action):
-		''' Play one step, add amino acid and define its phi/psi angles '''
+		''' Play one step, add an amino acid and define its phi/psi angles '''
 		AA  = self.get_residue_meanings(action[0])
 		phi = self.get_angle_meanings(action[1])
 		psi = self.get_angle_meanings(action[2])
@@ -264,7 +258,7 @@ class MolecularTetris():
 		start, F1, F2, e = self.path()
 		return(self.SnR(start, F1, F2, e, AA))
 	def AminoAcidOri(self, ori='phi'):
-		''' Get amino acid origin and its axis '''
+		''' Get amino acid origin and axis from the phi or psi perspective '''
 		N  = self.pose.GetAtom(self.i, 'N')
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
@@ -295,7 +289,7 @@ class MolecularTetris():
 			vX = origin - C
 			X = vX / np.linalg.norm(vX)
 			X_mag = np.linalg.norm(X)
-			OO = self.pose.GetAtom(self.i,'O')-self.pose.GetAtom(self.i,'OXT')
+			OO = self.pose.GetAtom(self.i,'O') - self.pose.GetAtom(self.i,'OXT')
 			vY = np.cross(OO, X)
 			Y = vY / np.linalg.norm(vY)
 			Y_mag = np.linalg.norm(Y)
@@ -303,10 +297,10 @@ class MolecularTetris():
 			Z = vZ / np.linalg.norm(vZ)
 			Z_mag = np.linalg.norm(Z)
 			return(origin, X, Y, Z)
-	def future(self, phi=0, psi=0, F1=[0, 0, 0], F2=[0, 0, 0], plot=False):
+	def future(self, phi_psi, plot=False):
 		''' For phi and psi angles return the future angles and points '''
 		a, b = self.a, self.b
-		phi, psi, PHI, PSI = math.radians(phi), math.radians(psi), phi, psi
+		phi, psi = math.radians(phi_psi[0]), math.radians(phi_psi[1])
 		PoriA, PXA, PYA, PZA = self.AminoAcidOri(ori='PHI')
 		dp = 3.1870621267869894
 		ds = 0.9526475062940741
@@ -334,52 +328,42 @@ class MolecularTetris():
 		SRM_ = np.linalg.inv(SRM)
 		fCA_psi = [0, ds * math.cos(psi), ds * math.sin(psi)]
 		fCA_psi = np.matmul(fCA_psi, SRM) + SoriA
-		fCA = fCA_psi
-		fT, fP, _, fd, fr = self.project(fCA)
-		if len(self.targetLST) != 0:
-			target = self.targetLST[0][1]
-			fCA_t = np.linalg.norm(fCA - target)
-			C_t = np.linalg.norm(C - target)
-			if fCA_t > C_t: fCA_t = 1e3
-		else: fCA_t = 0
+		fT, fP, _, fd, fr = self.project(fCA_psi)
+		if len(self.targetLST) != 0: ft=np.linalg.norm(fCA-self.targetLST[0][1])
+		else: ft = 0
 		if plot:
-			self.export(fCA, 'S', f'fCA_{PHI}_{PSI}')
+			self.export(fCA_psi, 'S', f'fCA_{PHI}_{PSI}')
 			self.export(fP, 'I', f'fP_{PHI}_{PSI}')
-		return(fT, fP, fd, fr, fCA_t)
-	def fT_fd(self, F1, F2):
-		''' Determine which action leads to lowest fT and which to lowest fd '''
-		Ts, ds, Tr = defaultdict(list), defaultdict(list), defaultdict(list)
-		for PHI in range(self.action_space[1].n):
-			phi = self.get_angle_meanings(PHI)
-			for PSI in range(self.action_space[2].n):
-				psi = self.get_angle_meanings(PSI)
-				fT, fP, fd, fr, fCA_t = self.future(phi=phi, psi=psi, F1=F1, F2=F2)
-				Ts[fT].append(PHI)
-				Ts[fT].append(PSI)
-				ds[fd].append(PHI)
-				ds[fd].append(PSI)
-				Tr[fCA_t].append(PHI)
-				Tr[fCA_t].append(PSI)
-		fT_v  = min(Ts.keys())
-		fT_aP = Ts[fT_v][0]
-		fT_aS = Ts[fT_v][1]
-		fd_v  = min(ds.keys())
-		fd_aP = ds[fd_v][0]
-		fd_aS = ds[fd_v][1]
-		Tr_v = min(Tr.keys())
-		Tr_aP = Tr[Tr_v][0]
-		Tr_aS = Tr[Tr_v][1]
-		return(fT_v, fT_aP, fT_aS, fd_v, fd_aP, fd_aS, Tr_v, Tr_aP, Tr_aS)
+		if   self.future_output == 'fT': return(fT)
+		elif self.future_output == 'fd': return(fd)
+		elif self.future_output == 'ft': return(ft)
+	def fT_fd_ft(self):
+		''' Determine which phi psi angles leads to lowest fT, fd or ft '''
+		results = []
+		for output in ['fT', 'fd', 'ft']:
+			self.future_output = output
+			solution = scipy.optimize.minimize(
+				self.future,
+				(180, 180),
+				bounds=((0.00, 359.99), (0.00, 359.99)),
+				method='SLSQP')
+			results.append(solution.x[0])
+			results.append(solution.x[1])
+			results.append(solution.fun)
+		fT_aP, fT_aS, fT_v = results[0], results[1], results[2]
+		fd_aP, fd_aS, fd_v = results[3], results[4], results[5]
+		Tr_aP, Tr_aS, Tr_v = results[6], results[7], results[8]
+		return(fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v, Tr_aP, Tr_aS, Tr_v)
 	def chi(self, AA, target):
 		''' Rotate all chi angels of an amino acid '''
 		CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
-		for chi in range(CHIs):
-			for value in range(360):
-				self.pose.Rotate(self.i, value, 'CHI', chi)
-				edge = self.pose.data['Coordinates'][-4]
-				distance = np.linalg.norm(target - edge)
-				if 0 < distance < 3.3: return(True)
-				else: return(False)
+		values = [0] #[0, 45, 90, 135, 180, 225, 270, 315] ################################### SLOW
+		for chis in itertools.product(*([[*values]] * CHIs)):
+			for c, v in enumerate(chis): self.pose.Rotate(self.i, v, 'CHI', c+1)
+			edge = self.pose.data['Coordinates'][-4]
+			distance = np.linalg.norm(target - edge)
+			if 0 < distance < 3.3: return(1)
+			else: continue
 		edge = self.pose.data['Coordinates'][-4]
 		distance = np.linalg.norm(target - edge)
 		if 0.0 < distance < 3.3: return(1)
@@ -413,8 +397,7 @@ class MolecularTetris():
 		''' Return the state features and rewards after each game step '''
 		# Calculating future CA
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
-		d = 0.9526475062940741
-		fCA = oriA + YA * d
+		fCA = oriA + YA * 0.9526475062940741
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
@@ -457,7 +440,7 @@ class MolecularTetris():
 		if   (self.i % 2) != 0: OE = 0
 		elif (self.i % 2) == 0: OE = 1
 		# Determine lowest fT and lowest fd
-		fT_aP,fT_aS,fT_v,fd_aP,fd_aS,fd_v,Tr_v,Tr_aP,Tr_aS = self.fT_fd(F1, F2)
+		fT_aP,fT_aS,fT_v,fd_aP,fd_aS,fd_v,Tr_aP,Tr_aS,Tr_v = self.fT_fd_ft()
 		# Distance to C-term for loop closure
 		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
 		# Final features
@@ -502,6 +485,14 @@ class MolecularTetris():
 ################################################################################
 ################################################################################
 ################################################################################
+
+from scipy import optimize
+parser = argparse.ArgumentParser(description='MolecularTetris Game')
+parser.add_argument('-rl', '--rl_train', action='store_true',
+help='Train a reinforcement learning agent')
+parser.add_argument('-rlp', '--rl_play', nargs='+',
+help='Have a trained agent play the game using the policy file')
+args = parser.parse_args()
 
 def RL(epochs=1, play=False, filename='policy.pth'):
 	''' Reinforcement Learning setup '''
@@ -572,3 +563,9 @@ def main():
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
+
+env = MolecularTetris()
+env.seed(90)
+env.reset()
+env.step([1, 180, 180])
+env.step([1, 0, 0])
