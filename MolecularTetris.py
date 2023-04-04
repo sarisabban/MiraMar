@@ -354,20 +354,12 @@ class MolecularTetris():
 		fd_aP, fd_aS, fd_v = results[3], results[4], results[5]
 		Tr_aP, Tr_aS, Tr_v = results[6], results[7], results[8]
 		return(fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v, Tr_aP, Tr_aS, Tr_v)
-	def chi(self, AA, target):
-		''' Rotate all chi angels of an amino acid '''
-		CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
-		values = [0] #[0, 45, 90, 135, 180, 225, 270, 315] ################################### SLOW
-		for chis in itertools.product(*([[*values]] * CHIs)):
-			for c, v in enumerate(chis): self.pose.Rotate(self.i, v, 'CHI', c+1)
-			edge = self.pose.data['Coordinates'][-4]
-			distance = np.linalg.norm(target - edge)
-			if 0 < distance < 3.3: return(1)
-			else: continue
+	def chi(self, chis):
+		''' Rotate all chi angels and measure distance to target '''
+		for c, v in enumerate(chis): self.pose.Rotate(self.i, v, 'CHI', c+1)
 		edge = self.pose.data['Coordinates'][-4]
-		distance = np.linalg.norm(target - edge)
-		if 0.0 < distance < 3.3: return(1)
-		else: return(2)
+		distance = np.linalg.norm(self.target - edge)
+		return(distance)
 	def target_logic(self, AA):
 		''' Rotating side chains and hitting targets '''
 		hit, direction, CA_t, C_t = 0, 0, 0, 0
@@ -382,13 +374,21 @@ class MolecularTetris():
 				hit = 3
 			Trgs = len(self.targetLST)
 			if Trgs != 0:
-				target = self.targetLST[0][1]
+				self.target = self.targetLST[0][1]
 				tT = self.targetLST[0][0]
-				CA_t = np.linalg.norm(CA - target)
-				C_t = np.linalg.norm(C - target)
+				CA_t = np.linalg.norm(CA - self.target)
+				C_t = np.linalg.norm(C - self.target)
 				if tT > T and self.i != 0: self.mark = True
 				if CA_t < C_t: direction = 1
-				if CA_t <= 13.0 and direction == 1: hit = self.chi(AA, target)
+				if CA_t <= 13.0 and direction == 1:
+					CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
+					x0 = tuple([180 for x in range(CHIs)])
+					bs = tuple([(0.00, 359.00) for x in range(CHIs)])
+					solution = scipy.optimize.minimize(
+						self.chi, x0, bounds=bs, method='SLSQP')
+					distance = solution.fun
+					if 0 < distance < 3.3: hit = 1
+					else: hit = 2
 				if hit == 1:
 					self.targetLST.pop(0)
 					self.mark = False
@@ -559,13 +559,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.rl_train: RL(epochs=3)
+	if   args.rl_train: RL(epochs=500)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
-
-env = MolecularTetris()
-env.seed(90)
-env.reset()
-env.step([1, 180, 180])
-env.step([1, 0, 0])
