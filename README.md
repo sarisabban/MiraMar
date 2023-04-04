@@ -41,14 +41,16 @@ The output of the game play are two .pdb (protein databank) files called *molecu
 To play by code (standard gym setup):
 
 ```
-from moleculartetris import MolecularTetris
+from moleculartetris import *
 
-env = MolecularTetris.MolecularTetris()
+env = MolecularTetris()
 env.seed(0)
 env.reset()
 env.step([0, 180, 180])
-env.render() # env.render(show=False, save=True) to save rather than show the game output, must have PyMOL installed
+env.render()
 ```
+
+You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output.
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
@@ -58,35 +60,38 @@ The **actions** are as follows:
 |Psi angle |S     |0-359 angles (360 actions)|
 
 The **features** are as follows:
-| Feature                                | Name    | Values   | Description           |
-|----------------------------------------|---------|----------|-----------------------|
-|Eccentricity                            |e        |[0, 1]    |Eccentricity of the ellipse|
-|Index of step                           |i        |[0, 15]   |The index of the state step|
-|Odd/Even of step                        |OE       |[0, 1]    |Whether the step is even or odd value|
-|Angle of Cα                             |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα                          |d        |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
-|Switch                                  |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
-|Phi angle action for lowest angle T     |Ta-phi   |[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
-|Psi angle action for lowest angle T     |Ta-psi   |[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
-|Expected future angle T                 |fT       |[0, 360]  |The predicted angle that will result if the reccomended phi and psi actions were taken|
-|Phi angle action for lowest distance mag|da-phi   |[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
-|Psi angle action for lowest distance mag|da-psi   |[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
-|Expected future distance mag            |fd       |[-50, 50] |The predicted distance that will result if the reccomended phi and psi actions were taken|
-|Distance to C-term                      |C-term   |[0, 1000] |The distance from N-term to C-term (for loop closure)|
-|Targets                                 |Trgs     |[3, 10]   |The number of reminaing targets|
-|Direction of target                     |direction|[0, 1]    |0 if target is away from side chain, 1 if target is in the same direction as the side chain|
-|Distabce to target                      |Ca_t     |[0, 13]   |Distabce from Cα to target|
+| Feature                             | Name    | Values   | Description           |
+|-------------------------------------|---------|----------|-----------------------|
+|Eccentricity                         |e        |[0, 1]    |Eccentricity of the ellipse|
+|Index of step                        |i        |[0, 15]   |The index of the state step|
+|Odd/Even of step                     |OE       |[0, 1]    |Whether the step is even or odd value|
+|Angle of Cα                          |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
+|Distance of Cα                       |d        |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
+|Switch                               |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
+|Φ angle for lowest angle T           |Ta-Φ     |[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
+|Ψ angle for lowest angle T           |Ta-Ψ     |[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
+|Expected future angle T              |fT       |[0, 360]  |The predicted angle that will result if the recommended phi and psi actions were taken|
+|Φ angle for lowest distance          |da-Φ     |[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
+|Ψ angle for lowest distance          |da-Ψ     |[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
+|Expected future distance mag         |fd       |[-50, 50] |The predicted distance that will result if the recommended phi and psi actions were taken|
+|Φ angle for lowest distance to target|ft-Φ     |[0, 7]    |The phi action that will result in the least sidechain distance to the target|
+|Ψ angle for lowest distance to target|ft-Ψ     |[0, 7]    |The psi action that will result in the least sidechain distance to the target|
+|Expected future distance to target   |ft       |[0, 13]   |The predicted distance to target that will result if the recommended phi and psi actions were taken|
+|Distance to C-term                   |C-term   |[0, 1000] |The distance from N-term to C-term (for loop closure)|
+|Targets                              |Trgs     |[3, 10]   |The number of reminaing targets|
+|Direction of target                  |direction|[0, 1]    |0 if target is away from side chain, 1 if target is in the same direction as the side chain|
+|Distance to target                   |Ca_t     |[0, 13]   |Distabce from Cα to target|
 
 The **rewards** are as follows:
-| Reward                        | Name | Values                   | Description           |
-|-------------------------------|------|--------------------------|-----------------------|
-|Forward/Backward move          |R1    |±1                        |When current Cα angle is less than previous angle (moving forward) +1 reward|
-|Cα Distance                    |R2    |-0.1*distance<sup>2</sup> |Cα distance from ellipse surface (more negative further away)|
-|Cα outside/inside ellipse      |R3    |±1                        |If the Cα is outside the ellipse +1 rewards|
-|Moving clockwise/anti-clockwise|R4    |±1                        |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
+| Reward                        | Name | Values                           | Description           |
+|-------------------------------|------|----------------------------------|-----------------------|
+|Forward/Backward move          |R1    |±1                                |When current Cα angle is less than previous angle (moving forward) +1 reward|
+|Cα Distance                    |R2    |-0.1*distance<sup>2</sup>         |Cα distance from ellipse surface (more negative further away)|
+|Cα outside/inside ellipse      |R3    |±1                                |If the Cα is outside the ellipse +1 rewards|
+|Moving clockwise/anti-clockwise|R4    |±1                                |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Target rewards                 |Rr    |+10 hit -10 miss -1 wrong AA 0 far|If the agent hits a target +10 reward, if failed to hit target because it chose the wrong amino acid -1 penalty, if it passed the target without hitting -10 penalty, if the target is too far away 0 reward|
-|Pre-mature end                 |Rt    |i - N                     |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
-|Loop closure                   |Rtc   |n / N                     |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
+|Pre-mature end                 |Rt    |i - N                             |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Loop closure                   |Rtc   |n / N                             |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Values | Description           |
