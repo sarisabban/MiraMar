@@ -33,9 +33,6 @@ pip install git+https://github.com/sarisabban/Pose
 pip install git+https://github.com/sarisabban/MolecularTetris
 ```
 
-ENVIRONMENT > pyvenv.cfg > include-system-site-packages = false > true
-
-
 The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
 To play by code (standard gym setup):
@@ -50,7 +47,7 @@ env.step([0, 180, 180])
 env.render()
 ```
 
-You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output.
+You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output. If not output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
