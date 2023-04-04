@@ -47,7 +47,7 @@ env.step([0, 180, 180])
 env.render()
 ```
 
-You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output. If not output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
+You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
