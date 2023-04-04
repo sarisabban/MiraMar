@@ -38,9 +38,9 @@ The output of the game play are two .pdb (protein databank) files called *molecu
 To play by code (standard gym setup):
 
 ```
-from moleculartetris import *
+from moleculartetris import game
 
-env = MolecularTetris()
+env = game.MolecularTetris()
 env.seed(0)
 env.reset()
 env.step([0, 180, 180])
