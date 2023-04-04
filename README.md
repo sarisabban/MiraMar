@@ -30,7 +30,7 @@ The goal is to build a cyclic polypeptide molecule, one amino acid at a time, go
 
 `pip install numpy scipy gym git+https://github.com/sarisabban/Pose`
 
-The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
+The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload these structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
 To play by code (standard gym setup):
 
