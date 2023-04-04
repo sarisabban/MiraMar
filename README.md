@@ -29,8 +29,8 @@ This is a game designed to be compatible with OpenAI's gym library that builds a
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
 ```
-pip install git+https://github.com/sarisabban/Pose
-pip install git+https://github.com/sarisabban/MolecularTetris
+pip install numpy scipy gym torch tianshou git+https://github.com/sarisabban/Pose
+
 ```
 
 The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
@@ -38,9 +38,9 @@ The output of the game play are two .pdb (protein databank) files called *molecu
 To play by code (standard gym setup):
 
 ```
-from moleculartetris import game
+from MolecularTetris import MolecularTetris
 
-env = game.MolecularTetris()
+env = MolecularTetris()
 env.seed(0)
 env.reset()
 env.step([0, 180, 180])
