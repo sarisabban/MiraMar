@@ -379,8 +379,8 @@ class MolecularTetris():
 				C_t = np.linalg.norm(C - self.target)
 				if tT > T and self.i != 0: self.mark = True
 				if CA_t < C_t: direction = 1
-				if CA_t <= 13.0 and direction == 1:
-					CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
+				CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
+				if CA_t <= 13.0 and direction == 1 and CHIs != 0:
 					x0 = tuple([180 for x in range(CHIs)])
 					bs = tuple([(0.00, 359.00) for x in range(CHIs)])
 					solution = scipy.optimize.minimize(

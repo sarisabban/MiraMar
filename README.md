@@ -33,13 +33,17 @@ pip install git+https://github.com/sarisabban/Pose
 pip install git+https://github.com/sarisabban/MolecularTetris
 ```
 
+ENVIRONMENT > pyvenv.cfg > include-system-site-packages = false > true
+
+
 The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
 To play by code (standard gym setup):
 
 ```
-from MolecularTetris import *
-env = MolecularTetris()
+from moleculartetris import MolecularTetris
+
+env = MolecularTetris.MolecularTetris()
 env.seed(0)
 env.reset()
 env.step([0, 180, 180])
