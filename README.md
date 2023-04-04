@@ -1,7 +1,7 @@
 # MolecularTetris
 *De novo* cyclic protein polypeptide design using reinforcement learning.
 
-<p align="center"><img src="image.png" width="80%" height="80%" /></p>
+<p align="center"><img src="MolecularTetris/image.png" width="80%" height="80%" /></p>
 
 ## Description:
 This is a game designed to be compatible with OpenAI's gym library that builds a cyclic polypeptide molecule.
@@ -28,26 +28,19 @@ This is a game designed to be compatible with OpenAI's gym library that builds a
 ## How to use:
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
-`pip install numpy gym pytorch tainshou git+https://github.com/sarisabban/Pose`
-
-`python3 MolecularTetris.py -p` to manually play the game. Follow on screen instructions. 
-
-`python3 MolecularTetris.py -rl` to train a reinforcement learning agent (DQN using PyTorch and Tainshou).
-
-`python3 MolecularTetris.py -rlp policy.pth` to have the reinforcement learning agent play the game using the *policy.pth* policy file.
+`pip install git+https://github.com/sarisabban/MolecularTetris`
 
 The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
 To play by code (standard gym setup):
 
 ```
+from MolecularTetris import *
 env = MolecularTetris()
-print('Observation space:', env.observation_space)
-print('Action space:', env.action_space)
 env.seed(0)
 env.reset()
 env.step([0, 180, 180])
-env.render() # env.render(show=False, save=True) to save rather than show the game output
+env.render() # env.render(show=False, save=True) to save rather than show the game output, must have PyMOL installed
 ```
 
 The **actions** are as follows:
