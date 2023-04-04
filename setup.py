@@ -15,4 +15,4 @@ setuptools.setup(
 	project_urls={'Bug Tracker':'https://github.com/sarisabban/MolecularTetris/issues'},
 	license='GPL-2.0',
 	packages=['MolecularTetris'],
-	install_requires=['numpy', 'scipy', 'gym', 'torch', 'tianshou', 'git+https://github.com/sarisabban/Pose'])
+	install_requires=['numpy', 'scipy', 'gym', 'torch', 'tianshou'])
