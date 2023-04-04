@@ -7,7 +7,7 @@
 This is a game designed to be compatible with OpenAI's gym library that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
 ## How to use:
-Install these depedencies using this command:
+Install the depedencies using this command:
 
 `pip install numpy scipy gym git+https://github.com/sarisabban/Pose`
 
