@@ -1,4 +1,5 @@
 import argparse
+import torch
 from torch import nn
 from MolecularTetris import MolecularTetris
 from tianshou.policy import PPOPolicy, DQNPolicy, BranchingDQNPolicy
