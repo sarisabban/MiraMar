@@ -6,25 +6,6 @@
 ## Description:
 This is a game designed to be compatible with OpenAI's gym library that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
-```
-=============================================
-╔╦╗┌─┐┬  ┌─┐┌─┐┬ ┬┬  ┌─┐┬─┐  ╔╦╗┌─┐┌┬┐┬─┐┬┌─┐
-║║║│ ││  ├┤ │  │ ││  ├─┤├┬┘   ║ ├┤  │ ├┬┘│└─┐
-╩ ╩└─┘┴─┘└─┘└─┘└─┘┴─┘┴ ┴┴└─   ╩ └─┘ ┴ ┴└─┴└─┘
-           0                            +
-                                       +   C
-   7          /    1         O-H       +  /|
-             /               |        +  / |
-            /              O=C        + /  |
-6          0          2       \       +/   |
-                             H-Ca-----P    |
-        ACTIONS               /        +   |
-   5               3       H-N         +   |
-                             |          +  F1
-           4                              
-=============================================
-```
-
 ## How to use:
 Install these depedencies using this command:
 
