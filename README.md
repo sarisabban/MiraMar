@@ -28,7 +28,7 @@ This is a game designed to be compatible with OpenAI's gym library that builds a
 ## How to use:
 The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
-`pip install numpy scipy gym torch tianshou git+https://github.com/sarisabban/Pose`
+`pip install numpy scipy gym git+https://github.com/sarisabban/Pose`
 
 The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload the structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
