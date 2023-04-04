@@ -43,6 +43,7 @@ env.reset()
 env.step([0, 180, 180])
 env.render()
 ```
+A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
 
 You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
