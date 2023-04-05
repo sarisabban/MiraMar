@@ -189,7 +189,7 @@ class MolecularTetris():
 		AAcoord = np.matmul(AAcoord, R)
 		AAcoord = AAcoord + self.start
 		self.pose.data['Coordinates'] = AAcoord
-	def addAA(self, AA='G', phi=None, psi=None):
+	def addAA(self, AA='M', phi=None, psi=None):
 		''' Add one amino acid to the end of the polypeptide chain '''
 		if self.pose == None:
 			self.sequence = []
