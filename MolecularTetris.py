@@ -331,8 +331,8 @@ class MolecularTetris():
 		if len(self.targetLST) != 0: ft=np.linalg.norm(fCA-self.targetLST[0][1])
 		else: ft = 0
 		if plot:
-			self.export(fCA_psi, 'S', f'fCA_{PHI}_{PSI}')
-			self.export(fP, 'I', f'fP_{PHI}_{PSI}')
+			self.export(fCA_psi, 'S', f'fCA_{phi_psi[0]}_{phi_psi[1]}')
+			self.export(fP, 'I', f'fP_{phi_psi[0]}_{phi_psi[1]}')
 		if   self.future_output == 'fT': return(fT)
 		elif self.future_output == 'fd': return(fd)
 		elif self.future_output == 'ft': return(ft)
