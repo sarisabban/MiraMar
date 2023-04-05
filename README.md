@@ -21,6 +21,8 @@ from MolecularTetris import MolecularTetris
 env = MolecularTetris()
 env.seed(0)
 env.reset()
+env.step([0, 0, 180])
+env.step([0, 180, 180])
 env.step([0, 180, 180])
 env.render()
 ```
