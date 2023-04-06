@@ -74,3 +74,17 @@ def main():
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
+
+''' train.slurm
+#!/bin/sh
+#SBATCH --job-name=MolTet
+#SBATCH --partition=compsci
+#SBATCH --time=72:00:00
+#SBATCH --mem=0
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=48
+
+cd $SLURM_SUBMIT_DIR
+
+python3 MolecularTetris.py -rl
+'''
