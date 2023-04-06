@@ -1,4 +1,5 @@
 import os
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import sys
 import math
 import scipy
@@ -12,6 +13,8 @@ import numpy as np
 from pose import *
 from gym.spaces import Box, MultiDiscrete
 warnings.filterwarnings('ignore')
+
+from scipy.optimize import minimize
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
