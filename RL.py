@@ -14,6 +14,7 @@ cd $SLURM_SUBMIT_DIR
 python3 RL.py -rl
 '''
 
+import sys
 import torch
 import argparse
 from torch import nn
