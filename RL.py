@@ -1,3 +1,19 @@
+# pip install torch tianshou numpy scipy gym git+https://github.com/sarisabban/Pose
+
+''' train.slurm
+#!/bin/sh
+#SBATCH --job-name=MolTet
+#SBATCH --partition=compsci
+#SBATCH --time=360:00:00
+#SBATCH --mem=0
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=48
+
+cd $SLURM_SUBMIT_DIR
+
+python3 RL.py -rl
+'''
+
 import torch
 import argparse
 from torch import nn
@@ -74,17 +90,3 @@ def main():
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
-
-''' train.slurm
-#!/bin/sh
-#SBATCH --job-name=MolTet
-#SBATCH --partition=compsci
-#SBATCH --time=72:00:00
-#SBATCH --mem=0
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=48
-
-cd $SLURM_SUBMIT_DIR
-
-python3 MolecularTetris.py -rl
-'''
