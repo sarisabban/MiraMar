@@ -4,7 +4,7 @@
 #!/bin/sh
 #SBATCH --job-name=MolTet
 #SBATCH --partition=compsci
-#SBATCH --time=840:00:00
+#SBATCH --time=168:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
@@ -66,7 +66,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 			policy,
 			train_collector,
 			tests_collector,
-			step_per_epoch=50000,
+			step_per_epoch=2000,
 			max_epoch=epochs,
 			step_per_collect=20,
 			episode_per_test=10,
@@ -87,7 +87,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.rl_train: RL(epochs=2000)
+	if   args.rl_train: RL(epochs=10000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
