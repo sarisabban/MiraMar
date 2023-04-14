@@ -87,7 +87,7 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.rl_train: RL(epochs=10000)
+	if   args.rl_train: RL(epochs=4000)
 	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
 
 if __name__ == '__main__': main()
