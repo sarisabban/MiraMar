@@ -4,7 +4,7 @@
 #!/bin/sh
 #SBATCH --job-name=MolTet
 #SBATCH --partition=compsci
-#SBATCH --time=168:00:00
+#SBATCH --time=200:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
