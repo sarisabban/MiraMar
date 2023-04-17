@@ -1,6 +1,9 @@
-# pip install torch tianshou numpy scipy gym git+https://github.com/sarisabban/Pose
+# 1. Install dependencies: pip install torch tianshou numpy scipy gym git+https://github.com/sarisabban/Pose
+# 2. Execute for training (training time 6 days): python3 RL.py -rl
+# 3. Execute to play invironment: python3 RL.py -rlp policy.pth
 
-''' train.slurm
+# This is BASH code to train the environment on a SLURM-based supercomputer
+'''
 #!/bin/sh
 #SBATCH --job-name=MolTet
 #SBATCH --partition=compsci
@@ -24,9 +27,9 @@ from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv, SubprocVectorEnv
 from tianshou.policy import DQNPolicy, BranchingDQNPolicy
 
-parser = argparse.ArgumentParser(description='Training on the MolecularTetris Game')
+parser = argparse.ArgumentParser(description='Reinforcement learning on the MolecularTetris environment')
 parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
-parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the policy file')
+parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the policy.pth file')
 args = parser.parse_args()
 
 def RL(epochs=1, play=False, filename='policy.pth'):
