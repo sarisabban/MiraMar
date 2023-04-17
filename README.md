@@ -19,15 +19,11 @@ To play by code (standard gym setup):
 from MolecularTetris import MolecularTetris
 
 env = MolecularTetris()
-
 env.seed(0)
-
 env.reset()
-
 env.step([0, 0, 180])
 env.step([0, 180, 180])
 env.step([0, 180, 180])
-
 env.render()
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
