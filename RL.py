@@ -17,14 +17,12 @@ python3 RL.py -rl
 import sys
 import torch
 import argparse
-from torch import nn
 from MolecularTetris import MolecularTetris
-from tianshou.policy import PPOPolicy, DQNPolicy, BranchingDQNPolicy
-from tianshou.utils.net.discrete import Actor, Critic
-from tianshou.utils.net.common import ActorCritic, Net, BranchingNet
+from tianshou.trainer import offpolicy_trainer
+from tianshou.utils.net.common import BranchingNet
+from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv, SubprocVectorEnv
-from tianshou.data import Collector, VectorReplayBuffer, Batch
-from tianshou.trainer import onpolicy_trainer, offpolicy_trainer
+from tianshou.policy import DQNPolicy, BranchingDQNPolicy
 
 parser = argparse.ArgumentParser(description='Training on the MolecularTetris Game')
 parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
