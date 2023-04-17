@@ -4,14 +4,16 @@
 <p align="center"><img src="image.png" width="80%" height="80%" /></p>
 
 ## Description:
-This is a game designed to be compatible with OpenAI's gym library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
+This is an environment designed to be compatible with OpenAI's gym library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
 ## How to use:
 Install the depedencies using this command:
 
-`pip install numpy scipy gym git+https://github.com/sarisabban/Pose`
+```
+pip install numpy scipy gym git+https://github.com/sarisabban/Pose
+```
 
-The output of the game play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload these structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
+The output of the environment play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload these structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
 To play by code (standard gym setup):
 
@@ -28,7 +30,7 @@ env.render()
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
 
-You can use `env.render(show=False, save=True)` to save rather than show the game output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
+You can use `env.render(show=False, save=True)` to save rather than show the environment output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
@@ -68,14 +70,14 @@ The **rewards** are as follows:
 |Cα outside/inside ellipse      |R3    |±1                                |If the Cα is outside the ellipse +1 rewards|
 |Moving clockwise/anti-clockwise|R4    |±1                                |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
 |Target rewards                 |Rr    |(-9/29)*SS_size + (299/29) hit or -10 miss or -1 wrong AA or 0 far|If the agent hits a target + reward (diminishes 10->1 with increasing sidechain size), if failed to hit target because it chose the wrong amino acid -1 penalty, if it passed the target without hitting -10 penalty, if the target is too far away 0 reward|
-|Pre-mature end                 |Rt    |i - N                             |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
-|Loop closure                   |Rtc   |n / N                             |If N-term to C-term distance < 1.5 Å the game will end and a reward is given, shorter polypeptide give larger reward|
+|Pre-mature end                 |Rt    |i - N                             |If the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
+|Loop closure                   |Rtc   |n / N                             |If N-term to C-term distance < 1.5 Å the environment will end and a reward is given, shorter polypeptide give larger reward|
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Values | Description           |
 |-------------------------------|------|--------|-----------------------|
 |Polypeptide length of i=N      |St1   |0       |The polypeptide can only reach a maximum length of N amino acids|
-|Self circle                    |St2   |Rt      |If the peptide chain makes a circle around itself the game will end and a penalty is given, larger the chain the less the penalty|
+|Self circle                    |St2   |Rt      |If the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
 |Loop closure                   |St3   |Rtc     |If the N-term to C-term distance < 1.5 Å|
 
 > __Note__
@@ -84,4 +86,7 @@ The **stop conditions** are as follows:
 > 
 > **n**: is the current final size of the built polypeptide.
 > 
-> **N**: is largest possible size of a polypeptide allowed by the game (20 amino acids).
+> **N**: is largest possible size of a polypeptide allowed by the environment (20 amino acids).
+
+## Training:
+Provided is the `RL.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
