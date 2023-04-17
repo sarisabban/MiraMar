@@ -14,8 +14,6 @@ from pose import *
 from gym.spaces import Box, MultiDiscrete
 warnings.filterwarnings('ignore')
 
-from scipy.optimize import minimize
-
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
 	def __init__(self):
