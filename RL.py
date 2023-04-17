@@ -27,9 +27,15 @@ from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv, SubprocVectorEnv
 from tianshou.policy import DQNPolicy, BranchingDQNPolicy
 
-parser = argparse.ArgumentParser(description='Reinforcement learning on the MolecularTetris environment')
-parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
-parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the policy.pth file')
+parser = argparse.ArgumentParser(
+description='Reinforcement learning on the MolecularTetris environment')
+
+parser.add_argument('-rl', '--rl_train', action='store_true', 
+help='Train a reinforcement learning agent')
+
+parser.add_argument('-rlp', '--rl_play', nargs='+',
+help='Have a trained agent play the game using the policy.pth file')
+
 args = parser.parse_args()
 
 def RL(epochs=1, play=False, filename='policy.pth'):
