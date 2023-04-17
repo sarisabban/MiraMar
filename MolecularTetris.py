@@ -248,7 +248,7 @@ class MolecularTetris():
 		self.addAA()
 		self.targetS()
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
-		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'G')
+		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'M')
 		return(S, data)
 	def step(self, action):
 		''' Play one step, add an amino acid and define its phi/psi angles '''
@@ -397,6 +397,8 @@ class MolecularTetris():
 		return(hit, Trgs, direction, CA_t)
 	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
+		# Maximum possible size of polypeptide
+		MAX = 20
 		# Calculating future CA
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
 		fCA = oriA + YA * 0.9526475062940741
@@ -407,12 +409,14 @@ class MolecularTetris():
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
 		hit, Trgs, direction, CA_t = self.target_logic(AA)
+		SS_size = len(self.pose.AminoAcids[AA]['Vectors'])
 		###########################
 		##### Reward Function #####
 		###########################
 		R = 0
 		# R1 - Reward for moving forward
-		if self.T > T: R += 1
+		if self.i == 0: T = 360
+		if self.T > T: R += (-1/14)*self.i + (15/14)
 		else:          R -= 1
 		self.T = T
 		# R2 - Penalty for distance from ellipse surface
@@ -431,10 +435,10 @@ class MolecularTetris():
 		else:                                     R -= 1
 		self.F1P = F1P
 		# Rr - Target rewards
-		if   hit == 0: R += 0  # Too far
-		elif hit == 1: R += 10 # Hit
-		elif hit == 2: R -= 1  # No rotamers (wrong AA)
-		elif hit == 3: R -= 10 # Miss
+		if   hit == 0: R += 0                          # Too far
+		elif hit == 1: R += (-9/29)*SS_size + (299/29) # Hit
+		elif hit == 2: R -= 1                          # No rotamers (wrong AA)
+		elif hit == 3: R -= 10                         # Miss
 		###########################
 		######## Features #########
 		###########################
@@ -448,14 +452,15 @@ class MolecularTetris():
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			fT_aP, fT_aS, fT_v, fd_aP, fd_aS, fd_v, Tr_aP, Tr_aS, Tr_v,
+			fT_aP, fT_aS, fT_v,
+			fd_aP, fd_aS, fd_v,
+			Tr_aP, Tr_aS, Tr_v,
 			C_term, Trgs, direction, CA_t])
 		###########################
 		### End State Condition ###
 		###########################
 		St = False
 		# St1 - If polypeptide reaches max amino acids
-		MAX = 20
 		if self.i >= MAX:
 			St = True
 		# St2 - End game if the chain made a circle onto itself
