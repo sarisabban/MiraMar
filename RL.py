@@ -14,7 +14,7 @@
 
 cd $SLURM_SUBMIT_DIR
 
-python3 RL.py -rl
+python3 -B RL.py -rl
 '''
 
 import os
