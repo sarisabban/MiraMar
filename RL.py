@@ -17,6 +17,8 @@ cd $SLURM_SUBMIT_DIR
 python3 RL.py -rl
 '''
 
+import os
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import sys
 import torch
 import argparse
