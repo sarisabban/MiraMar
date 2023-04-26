@@ -1,6 +1,6 @@
 # 1. Install dependencies: pip install torch tianshou numpy scipy gym git+https://github.com/sarisabban/Pose
-# 2. Execute for training (training time 6 days): python3 RL.py -rl
-# 3. Execute to play invironment: python3 RL.py -rlp policy.pth
+# 2. Execute for training (training time 6 days): python3 RL.py -rl DQN
+# 3. Execute to play invironment: python3 RL.py -rlp DQN policy.pth
 
 # This is BASH code to train the environment on a SLURM-based supercomputer
 '''
@@ -14,7 +14,7 @@
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -B RL.py -rl
+python3 RL.py -rl DQN
 '''
 
 import os
@@ -32,7 +32,7 @@ from tianshou.policy import DQNPolicy, BranchingDQNPolicy
 parser = argparse.ArgumentParser(
 description='Reinforcement learning on the MolecularTetris environment')
 
-parser.add_argument('-rl', '--rl_train', action='store_true', 
+parser.add_argument('-rl', '--rl_train', nargs='+',
 help='Train a reinforcement learning agent')
 
 parser.add_argument('-rlp', '--rl_play', nargs='+',
@@ -40,7 +40,7 @@ help='Have a trained agent play the game using the policy.pth file')
 
 args = parser.parse_args()
 
-def RL(epochs=1, play=False, filename='policy.pth'):
+def RL_DQN(epochs=0, play=False, filename='policy.pth'):
 	''' Reinforcement Learning setup '''
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	print(device)
@@ -96,7 +96,9 @@ def RL(epochs=1, play=False, filename='policy.pth'):
 		.format(result['rews'].mean(), result['lens'].mean()))
 
 def main():
-	if   args.rl_train: RL(epochs=4000)
-	elif args.rl_play:  RL(epochs=0, play=True, filename=sys.argv[2])
+	if args.rl_train:
+		if sys.argv[2].upper() == 'DQN': RL_DQN(epochs=4000)
+	elif args.rl_play:
+		if sys.argv[2].upper() == 'DQN': RL_DQN(play=True, filename=sys.argv[3])
 
 if __name__ == '__main__': main()
