@@ -90,3 +90,8 @@ The **stop conditions** are as follows:
 
 ## Training:
 Provided is the `RL.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
+
+
+
+#TODO
+move game from GYM to GYMNASIUM (what is currently supported)
