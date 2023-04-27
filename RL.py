@@ -2,6 +2,8 @@
 # 2. Execute for training (training time 6 days): python3 RL.py -rl DQN
 # 3. Execute to play invironment: python3 RL.py -rlp DQN policy.pth
 
+#PPO is better than DQN
+
 # This is BASH code to train the environment on a SLURM-based supercomputer
 '''
 #!/bin/sh
