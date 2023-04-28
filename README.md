@@ -4,18 +4,18 @@
 <p align="center"><img src="image.png" width="80%" height="80%" /></p>
 
 ## Description:
-This is an environment designed to be compatible with OpenAI's gym library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
+This is an environment designed to be compatible with OpenAI's gymnasium (not gym) library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
 ## How to use:
 Install the depedencies using this command:
 
 ```
-pip install numpy scipy gym git+https://github.com/sarisabban/Pose
+pip install numpy scipy gymnasium git+https://github.com/sarisabban/Pose
 ```
 
 The output of the environment play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload these structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
-To play by code (standard gym setup):
+To play by code (standard gymnasium setup):
 
 ```
 from MolecularTetris import MolecularTetris
@@ -90,8 +90,3 @@ The **stop conditions** are as follows:
 
 ## Training:
 Provided is the `RL.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
-
-
-
-#TODO
-move game from GYM to GYMNASIUM (what is currently supported)
