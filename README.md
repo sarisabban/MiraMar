@@ -20,13 +20,18 @@ To play by code (standard gymnasium setup):
 ```
 from MolecularTetris import MolecularTetris
 
-env = MolecularTetris()
+env = MolecularTetris(render_mode='human')
+
+observation_space = env.observation_space
+action_space = env.action_space
+metadata = env.metadata
+render_mode = env.render_mode
+reward_range = env.reward_range
+
 observation, info = env.reset(seed=0)
-print(env.observation_space)
-print(env.action_space)
 actions = env.action_space.sample()
 observation, reward, terminated, truncated, info = env.step(actions)
-env.render()
+
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
 
