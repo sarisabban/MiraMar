@@ -17,7 +17,7 @@ The output of the environment play are two .pdb (protein databank) files called 
 
 To play by code (standard gymnasium setup):
 
-```
+```py
 from MolecularTetris import MolecularTetris
 
 # Call the environment
