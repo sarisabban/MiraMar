@@ -20,18 +20,28 @@ To play by code (standard gymnasium setup):
 ```
 from MolecularTetris import MolecularTetris
 
-env = MolecularTetris(render_mode='human')
+# Call the environment
+env = MolecularTetris(render_mode='ansi') # render_mode='human' will show the molecule being built step by step
 
+# Information about the environment
 observation_space = env.observation_space
 action_space = env.action_space
 metadata = env.metadata
 render_mode = env.render_mode
 reward_range = env.reward_range
 
+# Reset the environment
 observation, info = env.reset(seed=0)
+
+# Take actions
 actions = env.action_space.sample()
 observation, reward, terminated, truncated, info = env.step(actions)
+observation, reward, terminated, truncated, info = env.step(actions)
 
+# See/Export the results
+env.render() # See result
+env.close()  # Close PyMOL
+env.export() # Export molecule
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
 
