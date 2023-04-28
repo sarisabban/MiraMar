@@ -252,7 +252,7 @@ class MolecularTetris():
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
-		return(self.SnR(start, F1, F2, e, AA))
+		return(self.SnR(start, F1, F2, e, AA.upper()))
 	def AminoAcidOri(self, ori='phi'):
 		''' Get amino acid origin and axis from the phi or psi perspective '''
 		N  = self.pose.GetAtom(self.i, 'N')
