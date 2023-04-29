@@ -6,7 +6,6 @@ import math
 import time
 import scipy
 import shutil
-import signal
 import pathlib
 import argparse
 import warnings
@@ -19,7 +18,7 @@ warnings.filterwarnings('ignore')
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
-	metadata = {'render_modes': ['ansi', 'human']}
+	metadata = {'render_modes':['ansi', 'human']}
 	def __init__(self, render_mode='ansi'):
 		''' Initialise global variables '''
 		self.observation_space = gym.spaces.Box(
@@ -27,7 +26,8 @@ class MolecularTetris():
 			[0, 0,0,  0,-50,0,  0,  0,  0,  0,  0,-50,  0,  0, 0,-50, 3,0, 0]),
 			high=np.array(
 			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
-		self.action_space = gym.spaces.MultiDiscrete([52, 360, 360])
+		self.action_space = gym.spaces.MultiDiscrete(
+			[52, 360, 360])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.step_rewards = []
@@ -70,50 +70,19 @@ class MolecularTetris():
 		locate = shutil.which('pymol')
 		if pathlib.Path('points.pdb').exists():
 			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
-			remove = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
+			removes = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
 		else:
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
-			remove = ['rm', 'molecule.pdb', 'path.pdb']
-
-
-
-
-
+			removes = ['rm', 'molecule.pdb', 'path.pdb']
 		if show == True and save == True:
 			if locate == None: print('PyMOL not installed') ; return
-			self.proc = subprocess.Popen(display, stdout=subprocess.PIPE)
+			subprocess.run(display, capture_output=True)
 		elif show == True and save == False:
 			if locate == None: print('PyMOL not installed') ; return
-			self.proc = subprocess.Popen(display, stdout=subprocess.PIPE)
-			time.sleep(1)
-			subprocess.run(remove)
+			subprocess.run(display, capture_output=True)
+			subprocess.run(removes)
 		elif show == False and save == True: return
-		elif show == False and save == False: subprocess.run(remove)
-
-
-
-
-
-	def close(self):
-		''' Close the rendered environment '''
-		os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		elif show == False and save == False: subprocess.run(removes)
 	def show(self, P, atom, define):
 		''' Show a specific point in a new points.pdb file '''
 		with open('points.pdb', 'a') as F:
@@ -126,6 +95,9 @@ class MolecularTetris():
 	def export(self):
 		''' Export the molecule only '''
 		self.render(show=False, save=True, path=False)
+	def close(self):
+		''' Close the environemnt '''
+		pass
 	def RotationMatrix(self, thetaX, thetaY, thetaZ):
 		''' Rotation Matrix '''
 		sx = math.sin(math.radians(thetaX))
@@ -445,8 +417,8 @@ class MolecularTetris():
 		R = 0
 		# R1 - Reward for moving forward
 		if self.i == 0: T = 360
-		if self.T > T: R += (-1/14)*self.i + (15/14)
-		else:          R -= 1
+		if self.T > T:  R += (-1/14)*self.i + (15/14)
+		else:           R -= 1
 		self.T = T
 		# R2 - Penalty for distance from ellipse surface
 		R -= 0.1 * d**2
@@ -514,25 +486,15 @@ class MolecularTetris():
 		###########################
 		####### Information #######
 		###########################
-		if self.i != 0: self.step_rewards.append(R)
-		info = {'action': self.step_actions, 'rewards':self.step_rewards}
+		if self.i != 0:
+			self.step_rewards.append(R)
+		info = {
+			'actions':self.step_actions,
+			'rewards':self.step_rewards}
+		if self.render_mode == 'human':
+			self.render(show=False, save=True)
+			display = ['pymol', 'molecule.pdb', 'path.pdb']
+			remove  = ['rm', 'molecule.pdb', 'path.pdb']
+			subprocess.run(display, capture_output=True)
+			subprocess.run(remove,  capture_output=True)
 		return(S, R, St, Sr, info)
-
-
-
-
-
-
-
-
-
-
-
-
-env = MolecularTetris(render_mode='ansi')
-observation, info = env.reset(seed=0)
-actions = env.action_space.sample()
-observation, reward, terminated, truncated, info = env.step(actions)
-observation, reward, terminated, truncated, info = env.step(actions)
-#env.render()
-#env.close()
