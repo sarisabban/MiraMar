@@ -21,7 +21,7 @@ To play by code (standard gymnasium setup):
 from MolecularTetris import MolecularTetris
 
 # Call the environment
-env = MolecularTetris(render_mode='ansi')
+env = MolecularTetris()
 
 # Information about the environment
 observation_space = env.observation_space
@@ -40,7 +40,6 @@ observation, reward, terminated, truncated, info = env.step(actions)
 
 # See/Export the results
 env.render() # See result
-env.close()  # Close PyMOL
 env.export() # Export molecule
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
