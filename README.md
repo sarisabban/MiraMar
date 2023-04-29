@@ -21,7 +21,7 @@ To play by code (standard gymnasium setup):
 from MolecularTetris import MolecularTetris
 
 # Call the environment
-env = MolecularTetris(render_mode='ansi') # render_mode='human' will show the molecule being built step by step
+env = MolecularTetris(render_mode='ansi')
 
 # Information about the environment
 observation_space = env.observation_space
