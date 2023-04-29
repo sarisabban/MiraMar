@@ -357,12 +357,17 @@ class MolecularTetris():
 				if tT > T and self.i != 0: self.mark = True
 				if CA_t < C_t: direction = 1
 				CHIs = len(self.pose.AminoAcids[AA]['Chi Angle Atoms'])
-				if CA_t <= 13.0 and direction == 1 and CHIs != 0:
+				if CA_t <= 13.0 and direction == 1 and CHIs != 0 and AA != 'P':
 					x0 = tuple([180 for x in range(CHIs)])
 					bs = tuple([(0.00, 359.00) for x in range(CHIs)])
 					solution = scipy.optimize.minimize(
 						self.chi, x0, bounds=bs, method='SLSQP')
 					distance = solution.fun
+					if 0 < distance < 3.3: hit = 1
+					else: hit = 2
+				elif CHIs == 0 or AA == 'P':
+					edge = self.pose.data['Coordinates'][-4]
+					distance = np.linalg.norm(self.target - edge)
 					if 0 < distance < 3.3: hit = 1
 					else: hit = 2
 				if hit == 1:
