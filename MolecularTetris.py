@@ -3,33 +3,35 @@
 import os
 import sys
 import math
+import time
 import scipy
 import shutil
+import signal
 import pathlib
 import argparse
 import warnings
 import itertools
 import subprocess
 import numpy as np
+import gymnasium as gym
 from pose import *
-from gym.spaces import Box, MultiDiscrete
 warnings.filterwarnings('ignore')
 
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
-	def __init__(self):
+	metadata = {'render_modes': ['ansi', 'human']}
+	def __init__(self, render_mode='ansi'):
 		''' Initialise global variables '''
-		self.n, self.bins = None, 360
-		self.observation_space = Box(
+		self.observation_space = gym.spaces.Box(
 			low=np.array(
 			[0, 0,0,  0,-50,0,  0,  0,  0,  0,  0,-50,  0,  0, 0,-50, 3,0, 0]),
 			high=np.array(
 			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
-		self.action_space = MultiDiscrete([52, self.bins, self.bins])
-	def get_angle_meanings(self, action):
-		''' Definition of each action's angle '''
-		angles = {a: 360/self.bins * a for a in range(self.bins)}
-		return(angles[action])
+		self.action_space = gym.spaces.MultiDiscrete([52, 360, 360])
+		self.reward_range = (-np.inf, np.inf)
+		self.render_mode  = render_mode
+		self.step_rewards = []
+		self.step_actions = []
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
@@ -40,9 +42,90 @@ class MolecularTetris():
 		35:'j', 36:'k', 37:'l', 38:'m', 39:'n', 40:'o', 41:'p', 42:'q', 43:'r',
 		44:'s', 45:'t', 46:'u', 47:'v', 48:'w', 49:'x', 50:'y', 51:'z'}
 		return(residues[action])
-	def seed(self, n=None):
-		''' Change the game's random seed that initiates the environment '''
-		self.n = n
+	def render(self, show=True, save=False, path=True, filename='molecule'):
+		''' Export the molecule as a PDB file and display it '''
+		points = self.path(path=True)
+		if path:
+			with open('path.pdb', 'w') as F:
+				for i, p in enumerate(points):
+					if   i == 0: a,e,c = 'N','N','A' ; F.write('HEADER C\n')
+					elif i == 1: a,e,c = 'S','S','A' ; F.write('HEADER F1\n')
+					elif i == 2: a,e,c = 'S','S','A' ; F.write('HEADER F2\n')
+					elif i == 3: a,e,c = 'H','H','B' ; F.write('HEADER Path\n')
+					else:        a,e,c = 'H','H','B'
+					A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
+					x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
+					Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
+					F.write(Entry)
+			with open('path.pdb', 'a') as F:
+				F.write('HEADER Targets\n')
+				for i, point in enumerate(self.targetLST):
+					p = point[1]
+					a, e, c = 'O', 'O', 'C'
+					A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
+					x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
+					Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
+					F.write(Entry)
+		self.pose.Export('{}.pdb'.format(filename))
+		locate = shutil.which('pymol')
+		if pathlib.Path('points.pdb').exists():
+			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
+			remove = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
+		else:
+			display = ['pymol', 'molecule.pdb', 'path.pdb']
+			remove = ['rm', 'molecule.pdb', 'path.pdb']
+
+
+
+
+
+		if show == True and save == True:
+			if locate == None: print('PyMOL not installed') ; return
+			self.proc = subprocess.Popen(display, stdout=subprocess.PIPE)
+		elif show == True and save == False:
+			if locate == None: print('PyMOL not installed') ; return
+			self.proc = subprocess.Popen(display, stdout=subprocess.PIPE)
+			time.sleep(1)
+			subprocess.run(remove)
+		elif show == False and save == True: return
+		elif show == False and save == False: subprocess.run(remove)
+
+
+
+
+
+	def close(self):
+		''' Close the rendered environment '''
+		os.killpg(os.getpgid(self.proc.pid), signal.SIGKILL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	def show(self, P, atom, define):
+		''' Show a specific point in a new points.pdb file '''
+		with open('points.pdb', 'a') as F:
+			F.write(f'HEADER {define}\n')
+			a, e, c = atom, atom, 'C'
+			A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
+			x, y, z, o, t, q = P[0], P[1], P[2], 1.0, 1.0, 0.0
+			Entry = self.pose.PDB_entry(A,1,a,l,r,c,s,I,x,y,z,o,t,q,e)
+			F.write(Entry)
+	def export(self):
+		''' Export the molecule only '''
+		self.render(show=False, save=True, path=False)
 	def RotationMatrix(self, thetaX, thetaY, thetaZ):
 		''' Rotation Matrix '''
 		sx = math.sin(math.radians(thetaX))
@@ -126,55 +209,6 @@ class MolecularTetris():
 		if T < 0: T += 360.0
 		if T == 0.0: T = 360.0
 		return(T, P, vP, vP_mag, r)
-	def render(self, show=True, save=False, filename='molecule'):
-		''' Export the molecule as a PDB file and display it '''
-		points = self.path(path=True)
-		with open('path.pdb', 'w') as F:
-			for i, p in enumerate(points):
-				if    i == 0: a, e, c = 'N', 'N', 'A' ; F.write('HEADER C\n')
-				elif  i == 1: a, e, c = 'S', 'S', 'A' ; F.write('HEADER F1\n')
-				elif  i == 2: a, e, c = 'S', 'S', 'A' ; F.write('HEADER F2\n')
-				elif  i == 3: a, e, c = 'H', 'H', 'B' ; F.write('HEADER Path\n')
-				else: a, e, c = 'H', 'H', 'B'
-				A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
-				x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
-				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
-				F.write(Entry)
-		with open('path.pdb', 'a') as F:
-			F.write('HEADER Targets\n')
-			for i, point in enumerate(self.targetLST):
-				p = point[1]
-				a, e, c = 'O', 'O', 'C'
-				A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
-				x, y, z, o, t, q = p[0], p[1], p[2], 1.0, 1.0, 0.0
-				Entry = self.pose.PDB_entry(A,i+1,a,l,r,c,s,I,x,y,z,o,t,q,e)
-				F.write(Entry)
-		self.pose.Export('{}.pdb'.format(filename))
-		if pathlib.Path('points.pdb').exists():
-			display = ['pymol', 'molecule.pdb', 'path.pdb', 'points.pdb']
-			remove = ['rm', 'molecule.pdb', 'path.pdb', 'points.pdb']
-		else:
-			display = ['pymol', 'molecule.pdb', 'path.pdb']
-			remove = ['rm', 'molecule.pdb', 'path.pdb']
-		locate = shutil.which('pymol')
-		if show == True and save == True:
-			if locate == None: print('PyMOL not installed') ; return
-			subprocess.run(display, capture_output=True)
-		elif show == True and save == False:
-			if locate == None: print('PyMOL not installed') ; return
-			subprocess.run(display, capture_output=True)
-			subprocess.run(remove)
-		elif show == False and save == True: return
-		elif show == False and save == False: subprocess.run(remove)
-	def export(self, P, atom, define):
-		''' Export a specific point '''
-		with open('points.pdb', 'a') as F:
-			F.write(f'HEADER {define}\n')
-			a, e, c = atom, atom, 'C'
-			A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
-			x, y, z, o, t, q = P[0], P[1], P[2], 1.0, 1.0, 0.0
-			Entry = self.pose.PDB_entry(A,1,a,l,r,c,s,I,x,y,z,o,t,q,e)
-			F.write(Entry)
 	def position(self):
 		''' Position the polypeptide at the start position of the path '''
 		CA = self.pose.GetAtom(0, 'CA')
@@ -224,35 +258,9 @@ class MolecularTetris():
 			point = self.C - point
 			T, P, vP, vP_mag, r = self.project(point)
 			points.append((T, point))
-			if plot: self.export(point, 'O', f'target_{p}')
+			if plot: self.show(point, 'O', f'target_{p}')
 		points.sort(key=lambda x: x[0], reverse=True)
 		self.targetLST = points
-	def reset(self):
-		''' Reset game '''
-		self.pose = None
-		np.random.seed(self.n)
-		self.i = 0
-		self.C = np.random.uniform(0, 50, size=(3,))
-		self.b = np.random.uniform(4, 8)
-		self.a = np.random.uniform(self.b, 10)
-		self.o = np.random.uniform(0, 90)
-		self.j = np.random.uniform(0, 90)
-		self.w = np.random.uniform(0, 90)
-		self.start, F1, F2, e = self.path()
-		self.addAA()
-		self.targetS()
-		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
-		S, R, St, info, data = self.SnR(self.start, F1, F2, e, 'M')
-		return(S, data)
-	def step(self, action):
-		''' Play one step, add an amino acid and define its phi/psi angles '''
-		AA  = self.get_residue_meanings(action[0])
-		phi = self.get_angle_meanings(action[1])
-		psi = self.get_angle_meanings(action[2])
-		self.addAA(AA, phi, psi)
-		self.i = max(self.pose.data['Amino Acids'].keys())
-		start, F1, F2, e = self.path()
-		return(self.SnR(start, F1, F2, e, AA.upper()))
 	def AminoAcidOri(self, ori='phi'):
 		''' Get amino acid origin and axis from the phi or psi perspective '''
 		N  = self.pose.GetAtom(self.i, 'N')
@@ -328,8 +336,8 @@ class MolecularTetris():
 		if len(self.targetLST) != 0: ft=np.linalg.norm(fCA-self.targetLST[0][1])
 		else: ft = 0
 		if plot:
-			self.export(fCA_psi, 'S', f'fCA_{phi_psi[0]}_{phi_psi[1]}')
-			self.export(fP, 'I', f'fP_{phi_psi[0]}_{phi_psi[1]}')
+			self.show(fCA_psi, 'S', f'fCA_{phi_psi[0]}_{phi_psi[1]}')
+			self.show(fP, 'I', f'fP_{phi_psi[0]}_{phi_psi[1]}')
 		if   self.future_output == 'fT': return(fT)
 		elif self.future_output == 'fd': return(fd)
 		elif self.future_output == 'ft': return(ft)
@@ -389,6 +397,33 @@ class MolecularTetris():
 					self.targetLST.pop(0)
 					self.mark = False
 		return(hit, Trgs, direction, CA_t)
+	def reset(self, seed=None):
+		''' Reset game '''
+		self.pose = None
+		np.random.seed(seed)
+		self.i = 0
+		self.C = np.random.uniform(0, 50, size=(3,))
+		self.b = np.random.uniform(4, 8)
+		self.a = np.random.uniform(self.b, 10)
+		self.o = np.random.uniform(0, 90)
+		self.j = np.random.uniform(0, 90)
+		self.w = np.random.uniform(0, 90)
+		self.start, F1, F2, e = self.path()
+		self.addAA()
+		self.targetS()
+		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
+		S, R, St, Sr, info = self.SnR(self.start, F1, F2, e, 'M')
+		return(S, info)
+	def step(self, actions):
+		''' Play one step, add an amino acid and define its phi/psi angles '''
+		AA  = self.get_residue_meanings(actions[0])
+		phi = actions[1]
+		psi = actions[2]
+		self.addAA(AA, phi, psi)
+		self.i = max(self.pose.data['Amino Acids'].keys())
+		start, F1, F2, e = self.path()
+		self.step_actions.append(list(actions))
+		return(self.SnR(start, F1, F2, e, AA.upper()))
 	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
 		# Maximum possible size of polypeptide
@@ -454,6 +489,7 @@ class MolecularTetris():
 		### End State Condition ###
 		###########################
 		St = False
+		Sr = False
 		# St1 - If polypeptide reaches max amino acids
 		if self.i >= MAX:
 			St = True
@@ -463,7 +499,7 @@ class MolecularTetris():
 		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
 		CHECK = [1 if x < 1.5 else 0 for x in MAGs]
 		if 1 in CHECK:
-			St = True
+			Sr = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
 		# St3 - End game if N-term to C-term distance < 1.5
@@ -472,11 +508,31 @@ class MolecularTetris():
 		vNC = C_term - N_term
 		distance = np.linalg.norm(vNC)
 		if distance < 1.5:
-			St = True
+			Sr = True
 			# Rtc - Reward at this end state only
 			R = len(self.pose.data['Amino Acids']) / MAX
 		###########################
-		####### Extra Info ########
+		####### Information #######
 		###########################
-		info, data = None, {}
-		return(S, R, St, info, data)
+		if self.i != 0: self.step_rewards.append(R)
+		info = {'action': self.step_actions, 'rewards':self.step_rewards}
+		return(S, R, St, Sr, info)
+
+
+
+
+
+
+
+
+
+
+
+
+env = MolecularTetris(render_mode='ansi')
+observation, info = env.reset(seed=0)
+actions = env.action_space.sample()
+observation, reward, terminated, truncated, info = env.step(actions)
+observation, reward, terminated, truncated, info = env.step(actions)
+#env.render()
+#env.close()
