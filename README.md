@@ -103,4 +103,4 @@ The **stop conditions** are as follows:
 > **N**: is largest possible size of a polypeptide allowed by the environment (20 amino acids).
 
 ## Training:
-Provided is the `RL.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
+Provided is the `RL_PPO.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
