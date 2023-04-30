@@ -1,9 +1,9 @@
 # 1. Install dependencies: pip install tqdm torch numpy scipy gymnasium git+https://github.com/sarisabban/Pose
-# 2. Execute for training (training time 6 days): python3 -B PPO.py
-# 3. Execute to play invironment: python3 -B PPO.py
+# 2. Execute for training (training time 6 days): python3 -B RL_PPO.py
+# 3. Execute to play invironment: python3 -B RL_PPO.py
 
 # This algorithm is a derivation from CleanRL's Multidescrete PPO script
-# 
+# https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
 # This is BASH code to train the environment on a SLURM-based supercomputer
 '''
 #!/bin/sh
@@ -16,7 +16,7 @@
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -B PPO.py
+python3 -B RL_PPO.py
 '''
 
 import tqdm
