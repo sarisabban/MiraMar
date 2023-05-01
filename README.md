@@ -44,7 +44,7 @@ env.export() # Export only the molecule
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.step([AMINO ACID, PHI, PSI]).
 
-You can use `env.render(show=False, save=True)` to save rather than show the environment output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the environment's directory, open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
+You can use `env.render(show=False, save=True)` to save rather than show the environment output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the venv's directory (python's virtual environment), open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
 The **actions** are as follows:
 | Action   | Name | Values                   |
