@@ -509,7 +509,7 @@ class MolecularTetris():
 					'l':self.i,
 					't':str(finish_time)},
 				'sequence':self.pose.data['FASTA'],
-				'terminal_obs':list(S)
+				'terminal_obs':list(S),
 				'molecule':self.pose.data}
 		else:
 			info = {
