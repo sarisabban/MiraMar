@@ -504,9 +504,10 @@ class MolecularTetris():
 				'rewards':self.step_rewards,
 				'dones':self.dones,
 				'terms':self.terms,
-				'return':sum(self.step_rewards),
-				'length':self.i,
-				'time':str(finish_time),
+				'episode':{
+					'r':sum(self.step_rewards),
+					'l':self.i,
+					't':str(finish_time)},
 				'sequence':self.pose.data['FASTA'],
 				'terminal_obs':S,
 				'molecule':self.pose.data}
