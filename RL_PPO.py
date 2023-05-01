@@ -1,5 +1,5 @@
-# 1. Install dependencies: pip install tqdm torch numpy scipy gymnasium git+https://github.com/sarisabban/Pose
-# 2. Execute for training (training time 6 days): python3 -B RL_PPO.py
+# 1. Install dependencies: pip install torch numpy scipy gymnasium git+https://github.com/sarisabban/Pose
+# 2. Execute for training: python3 -B RL_PPO.py
 # 3. Execute to play invironment: python3 -B RL_PPO.py
 
 # This algorithm is a derivation from CleanRL's Multidescrete PPO script
@@ -19,14 +19,15 @@ cd $SLURM_SUBMIT_DIR
 python3 -B RL_PPO.py
 '''
 
-import tqdm
+import time
 import torch
+import datetime
 import numpy as np
 import gymnasium as gym
 from MolecularTetris import MolecularTetris
 
 ENV           = MolecularTetris()
-n_envs        = 3
+n_envs        = 100
 n_steps       = 20
 epochs        = 4
 seed          = 1
@@ -40,6 +41,7 @@ vf_coef       = 0.5
 ent_coef      = 0.01
 max_grad_norm = 0.5
 target_kl     = None
+save_output   = False
 
 def make_env(seed, idx):
 	def thunk():
@@ -83,6 +85,7 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 torch.backends.cudnn.deterministic = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print('Training on:', device)
 # Environment setup
 envs = gym.vector.SyncVectorEnv([make_env(seed + i, i) for i in range(n_envs)])
 agent = Agent(envs).to(device)
@@ -103,12 +106,15 @@ logprobs  = torch.zeros((n_steps, n_envs)).to(device)
 next_obs  = torch.Tensor(envs.reset(seed=seed)[0]).to(device)
 next_done = torch.zeros(n_envs).to(device)
 # Updates
+STEPS = 0
 for update in range(1, n_updates + 1):
+	time_start = time.time()
 	# Anneal the learning rate
 	optimizer.param_groups[0]['lr'] = (1.0 - (update - 1.0) / n_updates) * lr
 	# Steps
 	text = f'Update {update}/{n_updates} - Steps'
-	for step in tqdm.tqdm(range(n_steps), desc=text, ascii=True, leave=False):
+	for step in range(n_steps):
+		STEPS += 1
 		obs[step] = next_obs
 		dones[step] = next_done
 		# Action logic
@@ -191,4 +197,20 @@ for update in range(1, n_updates + 1):
 	explained_var = np.nan if var_y == 0 else 1-np.var(y_true - y_pred) / var_y
 	Gt_mean = round(rewards[-1].mean().item(), 3)
 	Gt_SD   = round(rewards[-1].std().item() , 3)
-	print(f'{update}\tAverage return: {Gt_mean} +- {Gt_SD}')
+	loss_A  = round(pg_loss.item(), 3)
+	loss_C  = round(v_loss.item(), 3)
+	KL      = round(approx_kl.item(), 3)
+	time_end = time.time()
+	update_seconds = time_end - time_start
+	finish_seconds = round(update_seconds * (n_updates - update), 0)
+	finish_time = datetime.timedelta(seconds=finish_seconds)
+	A = f'Steps: {STEPS}/{timesteps:<10}'
+	B = f'Mean return: {Gt_mean} +- {Gt_SD:<10}'
+	C = f'Loss_A: {loss_A:<10}'
+	D = f'Loss_C: {loss_C:<10}'
+	E = f'KL: {KL:<10}'
+	F = f'time: {finish_time}'
+	if save_output:
+		with open('output.txt', 'a') as f:
+			f.write(A + B + C + D + E + F + '\n')
+	print(A + B + F)
