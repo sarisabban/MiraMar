@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import math
+import time
 import scipy
 import shutil
 import pathlib
 import warnings
+import datetime
 import subprocess
 import numpy as np
 import gymnasium as gym
@@ -27,6 +29,8 @@ class MolecularTetris():
 		self.render_mode  = render_mode
 		self.step_rewards = []
 		self.step_actions = []
+		self.dones = []
+		self.terms = []
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
@@ -371,6 +375,7 @@ class MolecularTetris():
 		return(hit, Trgs, direction, CA_t)
 	def reset(self, seed=None):
 		''' Reset game '''
+		self.time_start = time.time()
 		self.pose = None
 		np.random.seed(seed)
 		self.i = 0
@@ -488,9 +493,29 @@ class MolecularTetris():
 		###########################
 		if self.i != 0:
 			self.step_rewards.append(R)
-		info = {
-			'actions':self.step_actions,
-			'rewards':self.step_rewards}
+			self.dones.append(St)
+			self.terms.append(Sr)
+		if St or Sr:
+			self.time_end = time.time()
+			finish_seconds = self.time_end - self.time_start
+			finish_time = datetime.timedelta(seconds=finish_seconds)
+			info = {
+				'actions':self.step_actions,
+				'rewards':self.step_rewards,
+				'dones':self.dones,
+				'terms':self.terms,
+				'return':sum(self.step_rewards),
+				'length':self.i,
+				'time':str(finish_time),
+				'sequence':self.pose.data['FASTA'],
+				'terminal_obs':S,
+				'molecule':self.pose.data}
+		else:
+			info = {
+				'actions':self.step_actions,
+				'rewards':self.step_rewards,
+				'dones':self.dones,
+				'terms':self.terms}
 		if self.render_mode == 'human':
 			self.render(show=False, save=True)
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
