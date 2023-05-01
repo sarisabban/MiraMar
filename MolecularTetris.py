@@ -502,21 +502,21 @@ class MolecularTetris():
 			info = {
 				'actions':self.step_actions,
 				'rewards':self.step_rewards,
-				'dones':self.dones,
-				'terms':self.terms,
+				'terminations':self.dones,
+				'truncations':self.terms,
 				'episode':{
 					'r':sum(self.step_rewards),
 					'l':self.i,
 					't':str(finish_time)},
 				'sequence':self.pose.data['FASTA'],
-				'terminal_obs':S,
+				'terminal_obs':list(S)
 				'molecule':self.pose.data}
 		else:
 			info = {
 				'actions':self.step_actions,
 				'rewards':self.step_rewards,
-				'dones':self.dones,
-				'terms':self.terms}
+				'terminations':self.dones,
+				'truncations':self.terms}
 		if self.render_mode == 'human':
 			self.render(show=False, save=True)
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
