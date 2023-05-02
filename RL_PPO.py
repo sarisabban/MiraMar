@@ -79,13 +79,13 @@ class Agent(torch.nn.Module):
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
 #			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 16)),
-			layer_init(torch.nn.Linear(27, 16)),
+			layer_init(torch.nn.Linear(27, 64)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(16, 32)),
+			layer_init(torch.nn.Linear(64, 64)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
 #			layer_init(torch.nn.Linear(32, 128)),
-			layer_init(torch.nn.Linear(3200, 128)),
+			layer_init(torch.nn.Linear(6400, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
