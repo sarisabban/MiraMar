@@ -12,7 +12,7 @@ import numpy as np
 import gymnasium as gym
 from MolecularTetris import MolecularTetris
 
-env             = MolecularTetris()
+#env             = MolecularTetris()
 seed            = 1
 num_envs        = 8
 num_steps       = 128
@@ -26,7 +26,9 @@ clip_coef       = 0.1
 ent_coef        = 0.01
 vf_coef         = 0.5
 max_grad_norm   = 0.5
+mask_actions    = True
 target_kl       = None
+
 
 
 
@@ -46,17 +48,14 @@ def make_env(seed):
 
 
 
+
+
+
+
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 	torch.nn.init.orthogonal_(layer.weight, std)
 	torch.nn.init.constant_(layer.bias, bias_const)
 	return layer
-
-class Transpose(torch.nn.Module):
-	def __init__(self, permutation):
-		super().__init__()
-		self.permutation = permutation
-	def forward(self, x):
-		return x.permute(self.permutation)
 
 class CategoricalMasked(torch.distributions.categorical.Categorical):
 	def __init__(self, probs=None, logits=None, validate_args=None, masks=[]):
@@ -77,27 +76,16 @@ class CategoricalMasked(torch.distributions.categorical.Categorical):
 class Agent(torch.nn.Module):
 	def __init__(self, envs):
 		super(Agent, self).__init__()
-#		self.network = torch.nn.Sequential(
-#			Transpose((0, 3, 1, 2)),
-#			layer_init(torch.nn.Conv2d(27, 16, kernel_size=3, stride=2)),
-#			torch.nn.ReLU(),
-#			layer_init(torch.nn.Conv2d(16, 32, kernel_size=2)),
-#			torch.nn.ReLU(),
-#			torch.nn.Flatten(),
-#			layer_init(torch.nn.Linear(32 * 3 * 3, 128)),
-#			torch.nn.ReLU(),)
-#		self.nvec = envs.single_action_space.nvec
-#		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
-#		self.critic = layer_init(torch.nn.Linear(128, 1), std=1)
-
+		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-#			layer_init(torch.nn.Linear(np.array(envs.single_observation_space.shape).prod(), 16)),
+#			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 16)),
 			layer_init(torch.nn.Linear(27, 16)),
 			torch.nn.ReLU(),
 			layer_init(torch.nn.Linear(16, 32)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-			layer_init(torch.nn.Linear(32 * 100, 128)),
+#			layer_init(torch.nn.Linear(32, 128)),
+			layer_init(torch.nn.Linear(3200, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -124,8 +112,8 @@ torch.backends.cudnn.deterministic = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Training on:', device)
 # Environment setup
-#envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
 envs = gym.vector.SyncVectorEnv([make_env(seed + i) for i in range(num_envs)])
+#envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
 agent = Agent(envs).to(device)
 optimizer = torch.optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 batch_size = int(num_envs * num_steps)
@@ -144,6 +132,7 @@ logprobs = torch.zeros((num_steps, num_envs)).to(device)
 action_masks = torch.zeros((num_steps, num_envs) + (s_acts_nvec,)).to(device)
 # Start the environment
 next_obs = torch.Tensor(envs.reset()).to(device)
+#next_obs = torch.Tensor(envs.reset(seed=seed)[0]).to(device)
 next_done = torch.zeros(num_envs).to(device)
 # Updates
 global_step = 0
@@ -158,8 +147,14 @@ for update in range(1, num_updates + 1):
 		global_step += 1 * num_envs
 		obs[step] = next_obs
 		dones[step] = next_done
-		action_masks[step] = \
-		torch.Tensor(np.array([env.action_mask for env in envs.envs]))
+		if mask_actions:
+			action_masks[step] = \
+			torch.Tensor(np.array([env.action_mask for env in envs.envs]))
+		else:
+			sum_actions = envs.single_action_space.nvec.sum()
+			masks = [0.0 for a in range(sum_actions)]
+			array = np.array([masks for env in envs.envs])
+			action_masks[step] = torch.Tensor(array)
 		# Play game
 		with torch.no_grad():
 			action, logprob, _, value = \
@@ -175,10 +170,12 @@ for update in range(1, num_updates + 1):
 		rewards[step] = torch.tensor(reward).to(device).view(-1)
 		next_obs = torch.Tensor(next_obs).to(device)
 		next_done = torch.Tensor(done).to(device)
+
 		for item in info:
 			if 'episode' in item.keys():
-				print(f"Step={global_step}, Return={item['episode']['r']}, update_time")
+				print(f"Step = {global_step:,}, Return = {item['episode']['r']}, time = {time_update}")
 				break
+
 #		if 'final_info' in info.keys():
 #			for e in info['final_info'][index]:
 #				Gt = e['episode']['r']
@@ -260,5 +257,6 @@ for update in range(1, num_updates + 1):
 	y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
 	var_y = np.var(y_true)
 	explained_var = np.nan if var_y == 0 else 1-np.var(y_true - y_pred) / var_y
-	finish = round(time.time() - time_start * (num_updates - update), 0)
-	update_time = datetime.timedelta(seconds=finish)
+	time_seconds = time.time() - time_start
+	time_update_seconds = round(time_seconds * (num_updates - update), 0)
+	time_update = datetime.timedelta(seconds=time_update_seconds)
