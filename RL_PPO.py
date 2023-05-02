@@ -12,7 +12,7 @@ import numpy as np
 import gymnasium as gym
 from MolecularTetris import MolecularTetris
 
-#env             = MolecularTetris()
+env             = MolecularTetris()
 seed            = 1
 num_envs        = 8
 num_steps       = 128
@@ -26,31 +26,8 @@ clip_coef       = 0.1
 ent_coef        = 0.01
 vf_coef         = 0.5
 max_grad_norm   = 0.5
-mask_actions    = True
+mask_actions    = False
 target_kl       = None
-
-
-
-
-import gym
-import gym_microrts
-def make_env(seed):
-	def thunk():
-		env = gym.make('MicrortsMining-v1')
-		env = gym.wrappers.RecordEpisodeStatistics(env)
-		env.seed(seed)
-		env.action_space.seed(seed)
-		env.observation_space.seed(seed)
-		return env
-	return thunk
-
-
-
-
-
-
-
-
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 	torch.nn.init.orthogonal_(layer.weight, std)
@@ -78,14 +55,12 @@ class Agent(torch.nn.Module):
 		super(Agent, self).__init__()
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-#			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 16)),
-			layer_init(torch.nn.Linear(27, 64)),
+			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 64)),
 			torch.nn.ReLU(),
 			layer_init(torch.nn.Linear(64, 64)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-#			layer_init(torch.nn.Linear(32, 128)),
-			layer_init(torch.nn.Linear(6400, 128)),
+			layer_init(torch.nn.Linear(64, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -112,8 +87,7 @@ torch.backends.cudnn.deterministic = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Training on:', device)
 # Environment setup
-envs = gym.vector.SyncVectorEnv([make_env(seed + i) for i in range(num_envs)])
-#envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
+envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
 agent = Agent(envs).to(device)
 optimizer = torch.optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 batch_size = int(num_envs * num_steps)
@@ -131,11 +105,10 @@ dones = torch.zeros((num_steps, num_envs)).to(device)
 logprobs = torch.zeros((num_steps, num_envs)).to(device)
 action_masks = torch.zeros((num_steps, num_envs) + (s_acts_nvec,)).to(device)
 # Start the environment
-next_obs = torch.Tensor(envs.reset()).to(device)
-#next_obs = torch.Tensor(envs.reset(seed=seed)[0]).to(device)
+next_obs = torch.Tensor(envs.reset(seed=seed)[0]).to(device)
 next_done = torch.zeros(num_envs).to(device)
 # Updates
-global_step = 0
+global_step, time_update = 0, np.inf
 for update in range(1, num_updates + 1):
 	time_start = time.time()
 	# Anneal the learning rate
@@ -163,24 +136,19 @@ for update in range(1, num_updates + 1):
 		actions[step] = action
 		logprobs[step] = logprob
 		################################################
-		next_obs, reward, done, info = envs.step(action.cpu().numpy())
-#		next_obs, reward, term, trun, info = envs.step(action.cpu().numpy())
-#		done = term + trun
-#		index = np.where(done==True)[0]
+		next_obs, reward, term, trun, info = envs.step(action.cpu().numpy())
+		done = term + trun
+		index = np.where(done==True)[0]
 		rewards[step] = torch.tensor(reward).to(device).view(-1)
 		next_obs = torch.Tensor(next_obs).to(device)
 		next_done = torch.Tensor(done).to(device)
 
-		for item in info:
-			if 'episode' in item.keys():
-				print(f"Step = {global_step:,}, Return = {item['episode']['r']}, time = {time_update}")
-				break
 
-#		if 'final_info' in info.keys():
-#			for e in info['final_info'][index]:
-#				Gt = e['episode']['r']
-#				Gts.append(Gt)
-#			break
+		if 'final_info' in info.keys():
+			for e in info['final_info'][index]:
+				Gt = e['episode']['r']
+				print(f'Step = {global_step:,}, Return = {Gt}, Remaining time = {time_update}')
+			break
 		###############################################
 	# Bootstrap value
 	with torch.no_grad():
@@ -218,7 +186,7 @@ for update in range(1, num_updates + 1):
 			_, newlogprob, entropy, newvalue = agent.get_action_and_value(
 				b_obs[mb_inds],
 				b_action_masks[mb_inds],
-				b_actions.long()[mb_inds].T,)
+				b_actions.long()[mb_inds].T)
 			logratio = newlogprob - b_logprobs[mb_inds]
 			ratio = logratio.exp()
 			# Aproximate KL divergence
