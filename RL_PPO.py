@@ -30,13 +30,9 @@ target_kl       = None
 
 
 
-
-
-
-
 import gym
 import gym_microrts
-def make_env(gym_id, seed):
+def make_env(seed):
 	def thunk():
 		env = gym.make('MicrortsMining-v1')
 		env = gym.wrappers.RecordEpisodeStatistics(env)
@@ -45,7 +41,6 @@ def make_env(gym_id, seed):
 		env.observation_space.seed(seed)
 		return env
 	return thunk
-
 
 
 
@@ -82,14 +77,27 @@ class CategoricalMasked(torch.distributions.categorical.Categorical):
 class Agent(torch.nn.Module):
 	def __init__(self, envs):
 		super(Agent, self).__init__()
+#		self.network = torch.nn.Sequential(
+#			Transpose((0, 3, 1, 2)),
+#			layer_init(torch.nn.Conv2d(27, 16, kernel_size=3, stride=2)),
+#			torch.nn.ReLU(),
+#			layer_init(torch.nn.Conv2d(16, 32, kernel_size=2)),
+#			torch.nn.ReLU(),
+#			torch.nn.Flatten(),
+#			layer_init(torch.nn.Linear(32 * 3 * 3, 128)),
+#			torch.nn.ReLU(),)
+#		self.nvec = envs.single_action_space.nvec
+#		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
+#		self.critic = layer_init(torch.nn.Linear(128, 1), std=1)
+
 		self.network = torch.nn.Sequential(
-			Transpose((0, 3, 1, 2)),
-			layer_init(torch.nn.Conv2d(27, 16, kernel_size=3, stride=2)),
+#			layer_init(torch.nn.Linear(np.array(envs.single_observation_space.shape).prod(), 16)),
+			layer_init(torch.nn.Linear(27, 16)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Conv2d(16, 32, kernel_size=2)),
+			layer_init(torch.nn.Linear(16, 32)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-			layer_init(torch.nn.Linear(32 * 3 * 3, 128)),
+			layer_init(torch.nn.Linear(32 * 100, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -116,10 +124,8 @@ torch.backends.cudnn.deterministic = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Training on:', device)
 # Environment setup
-#####################################################
-envs = gym.vector.SyncVectorEnv([make_env(gym_id, seed + i) for i in range(num_envs)])
-# envs = gym.vector.SyncVectorEnv([lambda: env for i in range(n_envs)])
-#####################################################
+#envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
+envs = gym.vector.SyncVectorEnv([make_env(seed + i) for i in range(num_envs)])
 agent = Agent(envs).to(device)
 optimizer = torch.optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 batch_size = int(num_envs * num_steps)
