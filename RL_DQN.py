@@ -1,6 +1,6 @@
 # 1. Install dependencies: pip install torch tianshou numpy scipy gym git+https://github.com/sarisabban/Pose
 # 2. Execute for training (training time 6 days): python3 -B RL_DQN.py -rl
-# 3. Execute to play invironment: python3 -B RL_DQN.py -rlp policy.pth
+# 3. Execute to play environment: python3 -B RL_DQN.py -rlp policy.pth
 
 # This is BASH code to train the environment on a SLURM-based supercomputer
 '''
