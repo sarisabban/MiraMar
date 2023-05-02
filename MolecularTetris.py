@@ -27,10 +27,6 @@ class MolecularTetris():
 			[52, 360, 360])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
-		self.step_rewards = []
-		self.step_actions = []
-		self.dones = []
-		self.terms = []
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
@@ -379,6 +375,10 @@ class MolecularTetris():
 		''' Reset game '''
 		self.time_start = time.time()
 		self.pose = None
+		self.step_rewards = []
+		self.step_actions = []
+		self.dones = []
+		self.terms = []
 		np.random.seed(seed)
 		self.i = 0
 		self.C = np.random.uniform(0, 50, size=(3,))
@@ -390,6 +390,7 @@ class MolecularTetris():
 		self.start, F1, F2, e = self.path()
 		self.addAA()
 		self.targetS()
+		self.seed = seed
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, Sr, info = self.SnR(self.start, F1, F2, e, 'M')
 		return(S, info)
