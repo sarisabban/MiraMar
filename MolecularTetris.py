@@ -96,7 +96,9 @@ class MolecularTetris():
 		self.render(show=False, save=True, path=False)
 	def close(self):
 		''' Close the environemnt '''
-		pass
+		self.reset(self.seed)
+		self.pose = None
+		return None
 	def RotationMatrix(self, thetaX, thetaY, thetaZ):
 		''' Rotation Matrix '''
 		sx = math.sin(math.radians(thetaX))
