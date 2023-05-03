@@ -519,11 +519,16 @@ class MolecularTetris():
 				'rewards':self.step_rewards,
 				'terminations':self.dones,
 				'truncations':self.terms}
+		###########################
+		########## Extra ##########
+		###########################
+		# Render option
 		if self.render_mode == 'human':
 			self.render(show=False, save=True)
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
 			remove  = ['rm', 'molecule.pdb', 'path.pdb']
 			subprocess.run(display, capture_output=True)
 			subprocess.run(remove,  capture_output=True)
+		# Reset when environment ends
 		if St or Sr: self.reset(self.seed)
 		return(S, R, St, Sr, info)
