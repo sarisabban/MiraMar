@@ -14,8 +14,8 @@ from MolecularTetris import MolecularTetris
 
 env             = MolecularTetris()
 seed            = 1
-num_envs        = 8
-num_steps       = 128
+num_envs        = 32
+num_steps       = 32
 total_timesteps = 2000000
 num_minibatches = 4
 update_epochs   = 4
@@ -28,6 +28,7 @@ vf_coef         = 0.5
 max_grad_norm   = 0.5
 mask_actions    = False
 target_kl       = None
+log             = True
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 	torch.nn.init.orthogonal_(layer.weight, std)
@@ -38,11 +39,11 @@ class CategoricalMasked(torch.distributions.categorical.Categorical):
 	def __init__(self, probs=None, logits=None, validate_args=None, masks=[]):
 		self.masks = masks
 		if len(self.masks) == 0:
-			super(CategoricalMasked, self).__init__(probs, logits, validate_args)
+			super(CategoricalMasked,self).__init__(probs, logits, validate_args)
 		else:
 			self.masks = masks.type(torch.BoolTensor).to(device)
-			logits = torch.where(self.masks, logits, torch.tensor(-1e8).to(device))
-			super(CategoricalMasked, self).__init__(probs, logits, validate_args)
+			logits=torch.where(self.masks,logits,torch.tensor(-1e8).to(device))
+			super(CategoricalMasked,self).__init__(probs, logits, validate_args)
 	def entropy(self):
 		if len(self.masks) == 0:
 			return super(CategoricalMasked, self).entropy()
@@ -108,7 +109,7 @@ action_masks = torch.zeros((num_steps, num_envs) + (s_acts_nvec,)).to(device)
 next_obs = torch.Tensor(envs.reset(seed=seed)[0]).to(device)
 next_done = torch.zeros(num_envs).to(device)
 # Updates
-global_step, time_update = 0, np.inf
+global_step = 0
 for update in range(1, num_updates + 1):
 	time_start = time.time()
 	# Anneal the learning rate
@@ -116,6 +117,7 @@ for update in range(1, num_updates + 1):
 	lrnow = frac * learning_rate
 	optimizer.param_groups[0]['lr'] = lrnow
 	# Steps
+	Gts = []
 	for step in range(0, num_steps):
 		global_step += 1 * num_envs
 		obs[step] = next_obs
@@ -145,9 +147,10 @@ for update in range(1, num_updates + 1):
 		if 'final_info' in info.keys():
 			for e in info['final_info'][index]:
 				Gt = round(e['episode']['r'], 3)
-				print(f'Step = {global_step:<10,} Return = {Gt:<10,} Remaining time = {time_update}')
-			break
+				Gts.append(Gt)
 		###############################################
+	Gt_mean = round(np.array(Gts).mean(), 3)
+	Gt_SD   = round(np.array(Gts).std(), 3)
 	# Bootstrap value
 	with torch.no_grad():
 		next_value = agent.get_value(next_obs).reshape(1, -1)
@@ -226,3 +229,23 @@ for update in range(1, num_updates + 1):
 	time_seconds = time.time() - time_start
 	time_update_seconds = round(time_seconds * (num_updates - update), 0)
 	time_update = datetime.timedelta(seconds=time_update_seconds)
+	if log:
+		with open('train.log', 'a') as f:
+			A_loss  = round(pg_loss.item(), 3)
+			C_loss  = round(v_loss.item(), 3)
+			Entropy = round(entropy_loss.item(), 3)
+			Loss    = round(loss.item(), 3)
+			KL      = round(approx_kl.item(), 3)
+			Clip    = round(clipfracs[-1], 3)
+			A = f'Update: {update:<20,}'
+			B = f'Steps: {global_step:<20,}'
+			C = f'Returns: {Gt_mean:,} +- {Gt_SD:<20,}'
+			D = f'A_loss: {A_loss:<20,}'
+			E = f'C_loss: {C_loss:<20,}'
+			F = f'Entropy loss: {Entropy:<20,}'
+			G = f'Final loss: {Loss:<20,}'
+			H = f'KL: {KL:<20,}'
+			I = f'Clip: {Clip:<20,}'
+			J = f'Remaining time: {time_update}\n'
+			f.write(A + B + C + D + E + F + G + H + I + J)
+	print(f'Updates: {update}/{num_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<10,} Remaining time: {time_update}')
