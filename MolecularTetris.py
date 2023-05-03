@@ -92,7 +92,6 @@ class MolecularTetris():
 		self.render(show=False, save=True, path=False)
 	def close(self):
 		''' Close the environemnt '''
-		self.reset(self.seed)
 		self.pose = None
 		return None
 	def RotationMatrix(self, thetaX, thetaY, thetaZ):
@@ -526,4 +525,5 @@ class MolecularTetris():
 			remove  = ['rm', 'molecule.pdb', 'path.pdb']
 			subprocess.run(display, capture_output=True)
 			subprocess.run(remove,  capture_output=True)
+		if St or Sr: self.reset(self.seed
 		return(S, R, St, Sr, info)
