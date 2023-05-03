@@ -142,12 +142,10 @@ for update in range(1, num_updates + 1):
 		rewards[step] = torch.tensor(reward).to(device).view(-1)
 		next_obs = torch.Tensor(next_obs).to(device)
 		next_done = torch.Tensor(done).to(device)
-
-
 		if 'final_info' in info.keys():
 			for e in info['final_info'][index]:
-				Gt = e['episode']['r']
-				print(f'Step = {global_step:,}, Return = {Gt}, Remaining time = {time_update}')
+				Gt = round(e['episode']['r'], 3)
+				print(f'Step = {global_step:<10,} Return = {Gt:<10,} Remaining time = {time_update}')
 			break
 		###############################################
 	# Bootstrap value
