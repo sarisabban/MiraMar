@@ -525,5 +525,5 @@ class MolecularTetris():
 			remove  = ['rm', 'molecule.pdb', 'path.pdb']
 			subprocess.run(display, capture_output=True)
 			subprocess.run(remove,  capture_output=True)
-		if St or Sr: self.reset(self.seed
+		if St or Sr: self.reset(self.seed)
 		return(S, R, St, Sr, info)
