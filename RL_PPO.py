@@ -14,8 +14,8 @@ from MolecularTetris import MolecularTetris
 
 env             = MolecularTetris()
 seed            = 1
-num_envs        = 32
-num_steps       = 32
+num_envs        = 64
+num_steps       = 16
 total_timesteps = 2000000
 num_minibatches = 4
 update_epochs   = 4
@@ -56,12 +56,12 @@ class Agent(torch.nn.Module):
 		super(Agent, self).__init__()
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 64)),
+			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 128)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(64, 64)),
+			layer_init(torch.nn.Linear(128, 128)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-			layer_init(torch.nn.Linear(64, 128)),
+			layer_init(torch.nn.Linear(128, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -137,7 +137,6 @@ for update in range(1, num_updates + 1):
 			values[step] = value.flatten()
 		actions[step] = action
 		logprobs[step] = logprob
-		################################################
 		next_obs, reward, term, trun, info = envs.step(action.cpu().numpy())
 		done = term + trun
 		index = np.where(done==True)[0]
@@ -148,7 +147,6 @@ for update in range(1, num_updates + 1):
 			for e in info['final_info'][index]:
 				Gt = round(e['episode']['r'], 3)
 				Gts.append(Gt)
-		###############################################
 	Gt_mean = round(np.array(Gts).mean(), 3)
 	Gt_SD   = round(np.array(Gts).std(), 3)
 	# Bootstrap value
