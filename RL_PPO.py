@@ -10,7 +10,7 @@ import random
 import datetime
 import numpy as np
 import gymnasium as gym
-from MolecularTetris_small import MolecularTetris
+from MolecularTetris import MolecularTetris
 
 env             = MolecularTetris()
 seed            = 1
