@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 updates, steps, returns, SD, A_loss, C_loss, E_loss, loss, KL, clip, var = [], [], [], [], [], [], [], [], [], [], []
 filename = 'train.log'
 with open(filename) as f:
+	for skip in range(18): next(f)
 	for line in f:
 		line = line.strip().split()
 		updates.append(int(line[1].replace(',', '')))
@@ -16,7 +17,7 @@ with open(filename) as f:
 		loss.append(   float(line[17].replace(',', '')))
 		KL.append(     float(line[19].replace(',', '')))
 		clip.append(   float(line[21].replace(',', '')))
-		var.append(    float(line[23].replace(',', '')))
+		var.append(    float(line[24].replace(',', '')))
 
 fig, axs = plt.subplots(4, 2)
 axs[0, 0].plot(steps, returns)
