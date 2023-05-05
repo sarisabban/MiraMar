@@ -10,15 +10,16 @@ import random
 import datetime
 import numpy as np
 import gymnasium as gym
-from MolecularTetris import MolecularTetris
+from MolecularTetris_small import MolecularTetris
 
 env             = MolecularTetris()
 seed            = 1
 num_envs        = 64
 num_steps       = 32
+nodes           = 64
 total_timesteps = 2000000
 num_minibatches = 4
-update_epochs   = 4
+epochs          = 4
 learning_rate   = 2.5e-4
 gamma           = 0.99
 gae_lambda      = 0.95
@@ -29,6 +30,26 @@ max_grad_norm   = 0.5
 target_kl       = 0.015
 mask_actions    = False
 log             = True
+
+with open('train.log', 'w') as f:
+	f.write('env:             ' + str(env) + '\n')
+	f.write('seed:            ' + str(seed) + '\n')
+	f.write('num_envs:        ' + str(num_envs) + '\n')
+	f.write('num_steps:       ' + str(num_steps) + '\n')
+	f.write('nodes:           ' + str(nodes) + '\n')
+	f.write('total_timesteps: ' + str(total_timesteps) + '\n')
+	f.write('num_minibatches: ' + str(num_minibatches) + '\n')
+	f.write('epochs:          ' + str(epochs) + '\n')
+	f.write('learning_rate:   ' + str(learning_rate) + '\n')
+	f.write('gamma:           ' + str(gamma) + '\n')
+	f.write('gae_lambda:      ' + str(gae_lambda) + '\n')
+	f.write('clip_coef:       ' + str(clip_coef) + '\n')
+	f.write('ent_coef:        ' + str(ent_coef) + '\n')
+	f.write('vf_coef:         ' + str(vf_coef) + '\n')
+	f.write('max_grad_norm:   ' + str(max_grad_norm) + '\n')
+	f.write('target_kl:       ' + str(target_kl) + '\n')
+	f.write('mask_actions:    ' + str(mask_actions) + '\n')
+	f.write('log:             ' + str(log) + '\n')
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 	torch.nn.init.orthogonal_(layer.weight, std)
@@ -56,12 +77,12 @@ class Agent(torch.nn.Module):
 		super(Agent, self).__init__()
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 64)),
+			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), nodes)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(64, 64)),
+			layer_init(torch.nn.Linear(nodes, nodes)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-			layer_init(torch.nn.Linear(64, 128)),
+			layer_init(torch.nn.Linear(nodes, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -177,7 +198,7 @@ for update in range(1, num_updates + 1):
 	# Optimise the policy (Actor) and value (Critic) neural networks
 	b_inds = np.arange(batch_size)
 	clipfracs = []
-	for epoch in range(update_epochs):
+	for epoch in range(epochs):
 		np.random.shuffle(b_inds)
 		for start in range(0, batch_size, minibatch_size):
 			end = start + minibatch_size
