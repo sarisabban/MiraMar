@@ -15,7 +15,7 @@ from MolecularTetris import MolecularTetris
 env             = MolecularTetris()
 seed            = 1
 num_envs        = 64
-num_steps       = 16
+num_steps       = 32
 total_timesteps = 2000000
 num_minibatches = 4
 update_epochs   = 4
@@ -26,8 +26,8 @@ clip_coef       = 0.1
 ent_coef        = 0.01
 vf_coef         = 0.5
 max_grad_norm   = 0.5
+target_kl       = 0.015
 mask_actions    = False
-target_kl       = None
 log             = True
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
@@ -56,12 +56,12 @@ class Agent(torch.nn.Module):
 		super(Agent, self).__init__()
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 128)),
+			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 64)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(128, 128)),
+			layer_init(torch.nn.Linear(64, 64)),
 			torch.nn.ReLU(),
 			torch.nn.Flatten(),
-			layer_init(torch.nn.Linear(128, 128)),
+			layer_init(torch.nn.Linear(64, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -190,7 +190,6 @@ for update in range(1, num_updates + 1):
 			ratio = logratio.exp()
 			# Aproximate KL divergence
 			with torch.no_grad():
-				old_approx_kl = (-logratio).mean()
 				approx_kl = ((ratio - 1) - logratio).mean()
 				clipfracs += [((ratio - 1.0).abs() > clip_coef) \
 				.float().mean().item()]
@@ -213,14 +212,14 @@ for update in range(1, num_updates + 1):
 			entropy_loss = entropy.mean()
 			# Final loss
 			loss = pg_loss - ent_coef * entropy_loss + v_loss * vf_coef
-			# Backpropagation
+			# Backpropagation and gradient descent
 			optimizer.zero_grad()
 			loss.backward()
 			torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
 			optimizer.step()
 		if target_kl is not None:
 			if approx_kl > target_kl: break
-	# Gradient descent
+	# Calculate explained variance
 	y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
 	var_y = np.var(y_true)
 	explained_var = np.nan if var_y == 0 else 1-np.var(y_true - y_pred) / var_y
@@ -244,6 +243,6 @@ for update in range(1, num_updates + 1):
 			G = f'Final loss: {Loss:<20,}'
 			H = f'KL: {KL:<20,}'
 			I = f'Clip: {Clip:<20,}'
-			J = f'Remaining time: {time_update}\n'
+			J = f'Explained Variance: {explained_var}\n'
 			f.write(A + B + C + D + E + F + G + H + I + J)
-	print(f'Updates: {update}/{num_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<10,} Remaining time: {time_update}')
+	print(f'Updates: {update}/{num_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
