@@ -102,5 +102,33 @@ The **stop conditions** are as follows:
 > 
 > **N**: is largest possible size of a polypeptide allowed by the environment (20 amino acids).
 
+## The information output:
+When the environment is at the initial state right after `env.reset()`, `info = {}`
+
+When the environment is not at the terminal state, the info is structured as follows:
+```
+'actions':[list of each step's actions],
+'rewards':[list of each step's rewards],
+'terminations':[list of each step's termination flag],
+'truncations':[list of each step's truncation flag]}
+```
+
+When the environment is not at the terminal state,
+```
+'actions':[list of each step's actions],
+'rewards':[list of each step's rewards],
+'terminations':[list of each step's termination flag],
+'truncations':[list of each step's truncation flag],
+'episode':
+		{
+		'r':final return of episode,
+		'l':length of molecule,
+		't':time it took to complete this episode
+		},
+'sequence':FASTA sequence of the molecule,
+'terminal_obs':final observation as a list (not an array),
+'molecule': the pose.data JSON data structure with all of the molecule's information}
+```
+
 ## Training:
 Provided is the `RL_PPO.py` script that trains on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
