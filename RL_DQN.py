@@ -14,7 +14,7 @@
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -B RL_DQN.py -rl
+python3 -u -B RL_DQN.py -rl
 '''
 
 import os
