@@ -469,12 +469,11 @@ class MolecularTetris():
 		###########################
 		### End State Condition ###
 		###########################
-		St = False
-		Sr = False
-		# St1 - If polypeptide reaches max amino acids
+		St, Sr = False, False
+		# St - If polypeptide reaches max amino acids
 		if self.i >= MAX:
 			St = True
-		# St2 - End game if the chain made a circle onto itself
+		# Sr1 - End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
 		VECs  = [CA - fCA for CA in CAs]
 		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
@@ -483,7 +482,7 @@ class MolecularTetris():
 			Sr = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
-		# St3 - End game if N-term to C-term distance < 1.5
+		# Sr2 - End game if N-term to C-term distance < 1.5
 		N_term = self.pose.GetAtom(0, 'N')
 		C_term = self.pose.GetAtom(self.i, 'C')
 		vNC = C_term - N_term
