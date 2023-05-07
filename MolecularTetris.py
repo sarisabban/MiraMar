@@ -13,8 +13,10 @@ import gymnasium as gym
 from pose import *
 warnings.filterwarnings('ignore')
 
+from scipy import optimize
+
 class MolecularTetris():
-	''' Environment to design cyclic peptides using reinforcement learning '''
+	''' Game for designing cyclic peptides using reinforcement learning '''
 	metadata = {'render_modes':['ansi', 'human']}
 	def __init__(self, render_mode='ansi'):
 		''' Initialise global variables '''
@@ -371,13 +373,13 @@ class MolecularTetris():
 					self.mark = False
 		return(hit, Trgs, direction, CA_t)
 	def reset(self, seed=None):
-		''' Reset environment '''
+		''' Reset game '''
 		self.time_start = time.time()
 		self.pose = None
 		self.step_rewards = []
 		self.step_actions = []
-		self.dones = []
 		self.terms = []
+		self.trncs = []
 		np.random.seed(seed)
 		self.i = 0
 		self.C = np.random.uniform(0, 50, size=(3,))
@@ -404,7 +406,7 @@ class MolecularTetris():
 		self.step_actions.append(list(actions))
 		return(self.SnR(start, F1, F2, e, AA.upper()))
 	def SnR(self, start, F1, F2, e, AA):
-		''' Return the state data after each environment step '''
+		''' Return the state features and rewards after each game step '''
 		# Maximum possible size of polypeptide
 		MAX = 20
 		# Calculating future CA
@@ -472,7 +474,7 @@ class MolecularTetris():
 		# St1 - If polypeptide reaches max amino acids
 		if self.i >= MAX:
 			St = True
-		# St2 - End environment if the chain made a circle onto itself
+		# St2 - End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
 		VECs  = [CA - fCA for CA in CAs]
 		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
@@ -481,7 +483,7 @@ class MolecularTetris():
 			Sr = True
 			# Rt - Reward at this end state only
 			R = self.i - MAX
-		# St3 - End environment if N-term to C-term distance < 1.5
+		# St3 - End game if N-term to C-term distance < 1.5
 		N_term = self.pose.GetAtom(0, 'N')
 		C_term = self.pose.GetAtom(self.i, 'C')
 		vNC = C_term - N_term
@@ -495,8 +497,8 @@ class MolecularTetris():
 		###########################
 		if self.i != 0:
 			self.step_rewards.append(R)
-			self.dones.append(St)
-			self.terms.append(Sr)
+			self.terms.append(St)
+			self.trncs.append(Sr)
 		if St or Sr:
 			self.time_end = time.time()
 			finish_seconds = self.time_end - self.time_start
@@ -504,8 +506,8 @@ class MolecularTetris():
 			info = {
 				'actions':self.step_actions,
 				'rewards':self.step_rewards,
-				'terminations':self.dones,
-				'truncations':self.terms,
+				'terminations':self.terms,
+				'truncations':self.trncs,
 				'episode':{
 					'r':sum(self.step_rewards),
 					'l':self.i,
@@ -517,18 +519,13 @@ class MolecularTetris():
 			info = {
 				'actions':self.step_actions,
 				'rewards':self.step_rewards,
-				'terminations':self.dones,
-				'truncations':self.terms}
-		###########################
-		########## Extra ##########
-		###########################
-		# Render option
+				'terminations':self.terms,
+				'truncations':self.trncs}
 		if self.render_mode == 'human':
 			self.render(show=False, save=True)
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
 			remove  = ['rm', 'molecule.pdb', 'path.pdb']
 			subprocess.run(display, capture_output=True)
 			subprocess.run(remove,  capture_output=True)
-		# Reset when environment ends
 		if St or Sr: self.reset(self.seed)
 		return(S, R, St, Sr, info)
