@@ -46,6 +46,10 @@ A step adds an amino acid and rotates its Φ and Ψ torsion angles as such env.s
 
 You can use `env.render(show=False, save=True)` to save rather than show the environment output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the venv's directory (python's virtual environment), open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
 
+> __Note__
+> 
+> The environment automatically resets itself once the episode ends, by running `self.reset(self.seed)`.
+
 The **actions** are as follows:
 | Action   | Name | Values                   |
 |----------|------|--------------------------|
