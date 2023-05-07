@@ -391,7 +391,6 @@ class MolecularTetris():
 		self.start, F1, F2, e = self.path()
 		self.addAA()
 		self.targetS()
-		self.seed = seed
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, Sr, info = self.SnR(self.start, F1, F2, e, 'M')
 		return(S, info)
