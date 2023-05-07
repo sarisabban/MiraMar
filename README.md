@@ -119,7 +119,7 @@ info =
 	}
 ```
 
-When the environment is not at the terminal state,
+When the environment is at the terminal state, the info is structured as follows:
 ```
 info = 
 	{
