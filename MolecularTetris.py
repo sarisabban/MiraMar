@@ -29,6 +29,7 @@ class MolecularTetris():
 			[52, 360, 360])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
+		self.seed = None
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
@@ -380,7 +381,8 @@ class MolecularTetris():
 		self.step_actions = []
 		self.terms = []
 		self.trncs = []
-		np.random.seed(seed)
+		if self.seed == None: self.seed = seed
+		np.random.seed(self.seed)
 		self.i = 0
 		self.C = np.random.uniform(0, 50, size=(3,))
 		self.b = np.random.uniform(4, 8)
