@@ -4,22 +4,37 @@
 # This algorithm is a derivation from CleanRL's Multidescrete mask PPO script
 # https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
 
+'''
+#!/bin/sh
+#SBATCH --job-name=MolTet
+#SBATCH --partition=compsci
+#SBATCH --time=72:00:00
+#SBATCH --mem=0
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=48
+
+cd $SLURM_SUBMIT_DIR
+
+python3 -u -B RL.py
+'''
+
 import time
 import torch
 import random
 import datetime
 import numpy as np
 import gymnasium as gym
+import matplotlib.pyplot as plt
 from MolecularTetris import MolecularTetris
 
 env             = MolecularTetris()
 seed            = 1
-num_envs        = 64
-num_steps       = 32
+num_envs        = 16
+num_steps       = 2048
+num_minibatches = 64
 nodes           = 64
 total_timesteps = 2000000
-num_minibatches = 4
-epochs          = 4
+epochs          = 32
 learning_rate   = 2.5e-4
 gamma           = 0.99
 gae_lambda      = 0.95
@@ -50,6 +65,12 @@ with open('train.log', 'w') as f:
 	f.write('target_kl:       ' + str(target_kl) + '\n')
 	f.write('mask_actions:    ' + str(mask_actions) + '\n')
 	f.write('log:             ' + str(log) + '\n')
+
+def make_env(env_id):
+	def thunk():
+		env = env_id
+		return env
+	return thunk
 
 def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
 	torch.nn.init.orthogonal_(layer.weight, std)
@@ -109,7 +130,7 @@ torch.backends.cudnn.deterministic = True
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Training on:', device)
 # Environment setup
-envs = gym.vector.SyncVectorEnv([lambda: env for i in range(num_envs)])
+envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(num_envs)])
 agent = Agent(envs).to(device)
 optimizer = torch.optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 batch_size = int(num_envs * num_steps)
@@ -149,7 +170,7 @@ for update in range(1, num_updates + 1):
 		else:
 			sum_actions = envs.single_action_space.nvec.sum()
 			masks = [0.0 for a in range(sum_actions)]
-			array = np.array([masks for env in envs.envs])
+			array = np.array([masks for env in range(num_envs)])
 			action_masks[step] = torch.Tensor(array)
 		# Play game
 		with torch.no_grad():
@@ -267,3 +288,57 @@ for update in range(1, num_updates + 1):
 			J = f'Explained Variance: {explained_var}\n'
 			f.write(A + B + C + D + E + F + G + H + I + J)
 	print(f'Updates: {update}/{num_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
+
+######################################################################3
+updates, steps, returns, SD, A_loss, C_loss, E_loss, loss, KL, clip, var = [], [], [], [], [], [], [], [], [], [], []
+filename = 'train.log'
+with open(filename) as f:
+	for skip in range(18): next(f)
+	for line in f:
+		line = line.strip().split()
+		updates.append(int(line[1].replace(',', '')))
+		steps.append(  int(line[3].replace(',', '')))
+		returns.append(float(line[5].replace(',', '')))
+		SD.append(     float(line[7].replace(',', '')))
+		A_loss.append( float(line[9].replace(',', '')))
+		C_loss.append( float(line[11].replace(',', '')))
+		E_loss.append( float(line[14].replace(',', '')))
+		loss.append(   float(line[17].replace(',', '')))
+		KL.append(     float(line[19].replace(',', '')))
+		clip.append(   float(line[21].replace(',', '')))
+		var.append(    float(line[24].replace(',', '')))
+
+fig, axs = plt.subplots(4, 2)
+axs[0, 0].plot(steps, returns)
+axs[0, 0].set_title('Returns')
+axs[0, 0].set(xlabel='Steps', ylabel='Returns')
+
+axs[0, 1].plot(updates, loss)
+axs[0, 1].set_title('Final Loss')
+axs[0, 1].set(xlabel='Updates', ylabel='Loss')
+
+axs[1, 1].plot(updates, A_loss)
+axs[1, 1].set_title('Actor loss')
+axs[1, 1].set(xlabel='Updates', ylabel='Loss')
+
+axs[2, 1].plot(updates, C_loss)
+axs[2, 1].set_title('Critic loss')
+axs[2, 1].set(xlabel='Updates', ylabel='Loss')
+
+axs[3, 1].plot(updates, E_loss)
+axs[3, 1].set_title('Entropy loss')
+axs[3, 1].set(xlabel='Updates', ylabel='Loss')
+
+axs[1, 0].plot(updates, KL)
+axs[1, 0].set_title('KL aproximation')
+axs[1, 0].set(xlabel='Updates', ylabel='Ratio')
+
+axs[2, 0].plot(updates, clip)
+axs[2, 0].set_title('Clip fraction')
+axs[2, 0].set(xlabel='Updates', ylabel='Fraction')
+
+axs[3, 0].plot(updates, var)
+axs[3, 0].set_title('Explained variance')
+axs[3, 0].set(xlabel='Updates', ylabel='variance')
+
+plt.show()
