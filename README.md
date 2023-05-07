@@ -129,13 +129,13 @@ info =
 	'truncations':[list of each step's truncation flag],
 	'episode':
 			{
-			'r':final return of episode,
-			'l':length of molecule,
-			't':time it took to complete this episode
+			'r':Final return of episode,
+			'l':Length of molecule,
+			't':Time it took to complete this episode
 			},
 	'sequence':FASTA sequence of the molecule,
-	'terminal_obs':final observation as a list (not an array),
-	'molecule': the pose.data JSON data structure with all of the molecule's information}
+	'terminal_obs':Final observation as a list (not an array),
+	'molecule':The pose.data JSON data structure with all of the molecule's information}
 	}
 ```
 
