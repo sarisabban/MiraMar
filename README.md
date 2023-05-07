@@ -6,7 +6,7 @@
 ## Description:
 This is an environment designed to be compatible with OpenAI's gymnasium (not gym) library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
 
-## How to use:
+## How to setup:
 Install the depedencies using this command:
 
 ```
@@ -15,6 +15,7 @@ pip install numpy scipy gymnasium git+https://github.com/sarisabban/Pose
 
 The output of the environment play are two .pdb (protein databank) files called *molecule.pdb* and *path.pdb*. These files can be viewed using PyMOL `apt install pymol`, or any other molecular visualisation software, or you can upload these structures [here](https://www.rcsb.org/3d-view) and view the files on a web browser.
 
+## How to play:
 To play by code (standard gymnasium setup):
 
 ```py
@@ -50,6 +51,7 @@ You can use `env.render(show=False, save=True)` to save rather than show the env
 > 
 > The environment automatically resets itself once the episode ends, by running `self.reset(self.seed)`.
 
+## Environment details:
 The **actions** are as follows:
 | Action   | Name | Values                   |
 |----------|------|--------------------------|
