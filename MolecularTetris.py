@@ -13,8 +13,6 @@ import gymnasium as gym
 from pose import *
 warnings.filterwarnings('ignore')
 
-from scipy import optimize
-
 class MolecularTetris():
 	''' Game for designing cyclic peptides using reinforcement learning '''
 	metadata = {'render_modes':['ansi', 'human']}
