@@ -18,16 +18,21 @@ class MolecularTetris():
 	metadata = {'render_modes':['ansi', 'human']}
 	def __init__(self, render_mode='ansi'):
 		''' Initialise global variables '''
+		self.bins = 360
 		self.observation_space = gym.spaces.Box(
 			low=np.array(
 			[0, 0,0,  0,-50,0,  0,  0,  0,  0,  0,-50,  0,  0, 0,-50, 3,0, 0]),
 			high=np.array(
 			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
 		self.action_space = gym.spaces.MultiDiscrete(
-			[52, 360, 360])
+			[52, self.bins, self.bins]])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.seed = None
+	def get_angle_meanings(self, action):
+		''' Definition of each action's angle '''
+		angles = {a: 360/self.bins * a for a in range(self.bins)}
+		return(angles[action])
 	def get_residue_meanings(self, action):
 		''' Definition of each action's residue '''
 		residues = {
