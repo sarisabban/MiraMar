@@ -25,7 +25,7 @@ class MolecularTetris():
 			high=np.array(
 			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
 		self.action_space = gym.spaces.MultiDiscrete(
-			[52, self.bins, self.bins]])
+			[52, self.bins, self.bins])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.seed = None
