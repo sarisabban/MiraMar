@@ -13,7 +13,7 @@ import gymnasium as gym
 from pose import *
 warnings.filterwarnings('ignore')
 
-class MolecularTetris():
+class MiraMar():
 	''' Game for designing cyclic peptides using reinforcement learning '''
 	metadata = {'render_modes':['ansi', 'human']}
 	def __init__(self, render_mode='ansi'):
