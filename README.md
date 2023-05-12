@@ -143,4 +143,4 @@ info =
 ```
 
 ## Training:
-Provided is the `RL.py` script that trains a PPO or a DQN agent on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
+Provided is the `RL.py` script that trains a PPO agent on the environment or plays an already trained enviroment. Instructions are isolated within the script itself, since this training process is separate from the actual environment code.
