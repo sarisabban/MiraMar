@@ -5,7 +5,7 @@
 
 '''
 #!/bin/sh
-#SBATCH --job-name=MolTet
+#SBATCH --job-name=Mira
 #SBATCH --partition=compsci
 #SBATCH --time=72:00:00
 #SBATCH --mem=0
@@ -24,10 +24,10 @@ import warnings
 import datetime
 import numpy as np
 import gymnasium as gym
-from MolecularTetris import MolecularTetris
+from MiraMar import MiraMar
 warnings.filterwarnings('ignore')
 
-env           = MolecularTetris()
+env           = MiraMar()
 n_envs        = 4#32
 n_steps       = 128#1024
 timesteps     = 2e6#10e6
