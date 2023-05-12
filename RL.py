@@ -1,7 +1,7 @@
 # This algorithm is a derivation from CleanRL's MultiDescrete PPO script
 # 1. Install dependencies: pip install torch gymnasium numpy scipy git+https://github.com/sarisabban/Pose
-# 2. Execute for training (training time 6 days): python3 -B RL.py
-# 3. Execute to play invironment: python3 -B RL.py
+# 2. Execute for training (training time 7 days): python3 -B RL.py -rl
+# 3. Execute to play invironment: python3 -B RL.py -rlp agent.pth
 
 '''
 #!/bin/sh
@@ -28,11 +28,11 @@ from MiraMar import MiraMar
 warnings.filterwarnings('ignore')
 
 env           = MiraMar()
-n_envs        = 4#32
-n_steps       = 128#1024
+n_envs        = 8#32
+n_steps       = 512#1024
 timesteps     = 2e6#10e6
-epochs        = 4#16
 n_minibatches = 4#64
+epochs        = 16
 nodes         = 64
 seed          = 1
 lr            = 2.5e-4
@@ -44,26 +44,6 @@ ent_coef      = 0.01
 max_grad_norm = 0.5
 target_kl     = 0.015
 log           = True
-
-if log:
-	with open('train.log', 'w') as f:
-		f.write('env:           ' + str(env) + '\n')
-		f.write('n_envs:        ' + str(n_envs) + '\n')
-		f.write('n_steps:       ' + str(n_steps) + '\n')
-		f.write('timesteps:     ' + str(int(timesteps)) + '\n')
-		f.write('epochs:        ' + str(epochs) + '\n')
-		f.write('n_minibatches: ' + str(n_minibatches) + '\n')
-		f.write('nodes:         ' + str(nodes) + '\n')
-		f.write('seed:          ' + str(seed) + '\n')
-		f.write('lr:            ' + str(lr) + '\n')
-		f.write('gamma:         ' + str(gamma) + '\n')
-		f.write('lambd:         ' + str(lambd) + '\n')
-		f.write('clip_coef:     ' + str(clip_coef) + '\n')
-		f.write('vf_coef:       ' + str(vf_coef) + '\n')
-		f.write('ent_coef:      ' + str(ent_coef) + '\n')
-		f.write('max_grad_norm: ' + str(max_grad_norm) + '\n')
-		f.write('target_kl:     ' + str(target_kl) + '\n')
-		f.write('log:           ' + str(log) + '\n' + '='*50 + '\n')
 
 def make_env(env_id):
 	def thunk():
@@ -117,7 +97,7 @@ optimizer = torch.optim.Adam(agent.parameters(), lr=lr, eps=1e-5)
 batch_size = int(n_envs * n_steps)
 minibatch_size = int(batch_size // n_minibatches)
 n_updates = int(timesteps // batch_size)
-# Storage setup
+# Storage buffer setup
 s_obs_space = envs.single_observation_space.shape
 s_act_space = envs.single_action_space.shape
 obs         = torch.zeros((n_steps, n_envs) + s_obs_space).to(device)
@@ -135,19 +115,19 @@ for update in range(1, n_updates + 1):
 	# Anneal the learning rate
 	time_start = time.time()
 	optimizer.param_groups[0]['lr'] = (1.0 - (update - 1.0) / n_updates) * lr
-	# Steps
+	# Steps to generate a dataset
 	Gts = []
 	for step in range(n_steps):
 		global_step += 1 * n_envs
 		obs[step] = next_obs
 		dones[step] = next_done
-		# Action logic
+		# Take action
 		with torch.no_grad():
 			action, logprob, _, value = agent.get_action_and_value(next_obs)
 			values[step] = value.flatten()
 		actions[step] = action
 		logprobs[step] = logprob
-		# Play game
+		# Play game using action
 		next_obs, reward, term, trun, info = envs.step(action.cpu().numpy())
 		done = term + trun
 		index = np.where(done==True)[0]
@@ -158,9 +138,7 @@ for update in range(1, n_updates + 1):
 			for e in info['final_info'][index]:
 				Gt = round(e['episode']['r'], 3)
 				Gts.append(Gt)
-				line = f'Steps: {global_step:<20,} Return: {Gt}'
-				with open('train.log', 'a') as f: f.write(line + '\n')
-	# Bootstrap value
+	# Bootstrap value using GAE
 	with torch.no_grad():
 		next_value = agent.get_value(next_obs).reshape(1, -1)
 		advantages = torch.zeros_like(rewards).to(device)
@@ -173,10 +151,9 @@ for update in range(1, n_updates + 1):
 				nextnonterminal = 1.0 - dones[t + 1]
 				nextvalues = values[t + 1]
 			delta = rewards[t] + gamma * nextvalues * nextnonterminal-values[t]
-			advantages[t] = lastgaelam = \
-				delta + gamma * lambd * nextnonterminal * lastgaelam
+			advantages[t] = lastgaelam = delta + gamma * lambd * nextnonterminal * lastgaelam
 		returns = advantages + values
-	# Flatten the batch
+	# Flatten the dataset
 	b_obs        = obs.reshape((-1,) + envs.single_observation_space.shape)
 	b_actions    = actions.reshape((-1,) + envs.single_action_space.shape)
 	b_returns    = returns.reshape(-1)
@@ -189,17 +166,14 @@ for update in range(1, n_updates + 1):
 	for epoch in range(epochs):
 		np.random.shuffle(b_indx)
 		for start in range(0, batch_size, minibatch_size):
+			# Get minibatch
 			end = start + minibatch_size
 			mb_inds = b_indx[start:end]
-			_, newlogprob, entropy, newvalue = agent.get_action_and_value( \
-				b_obs[mb_inds], b_actions.long()[mb_inds].T)
+			# Push minibatch through Actor/Critic networks 
+			_, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions.long()[mb_inds].T)
 			logratio = newlogprob - b_logprobs[mb_inds]
 			ratio = logratio.exp()
-			# Aproximate KL divergence
-			with torch.no_grad():
-				approx_kl = ((ratio - 1) - logratio).mean()
-				clipfracs += [((ratio - 1.0).abs() > clip_coef) \
-					.float().mean().item()]
+			# Calculate Advantage
 			mb_adv = b_advantages[mb_inds]
 			mb_advantages = (mb_adv - mb_adv.mean()) / (mb_adv.std() + 1e-8)
 			# Policy loss
@@ -223,6 +197,10 @@ for update in range(1, n_updates + 1):
 			loss.backward()
 			torch.nn.utils.clip_grad_norm_(agent.parameters(),max_grad_norm)
 			optimizer.step()
+			# Aproximate KL divergence
+			with torch.no_grad():
+				approx_kl = ((ratio - 1) - logratio).mean()
+				clipfracs += [((ratio - 1.0).abs() > clip_coef).float().mean().item()]
 		if target_kl is not None:
 			if approx_kl > target_kl: break
 	# Explained variance
@@ -256,11 +234,24 @@ for update in range(1, n_updates + 1):
 			K = f'Remaining time: {time_update}\n'
 			f.write(A + B + C + D + E + F + G + H + I + J + K)
 	print(f'Updates: {update}/{n_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
+# Export agent model
+#torch.save(agent.state_dict(), 'agent.pth')
 
 
 
-#############33
-################
-# save weights
-
-# play game
+def play():
+	''' Play environment using a trained agent '''
+	# Import agent model
+	agent = Agent()
+	agent = torch.load_state_dict(torch.load('agent.pth'))
+	agent.eval()
+	# Play game
+	env = MiraMar()
+	S, I = env.reset()
+	for t in range(20):
+		A, Plog, E, q = agent.get_action_and_value(S)
+		S, R, T, U, I = env.step(A)
+		done = T + U
+		if done:
+			env.render()
+			break
