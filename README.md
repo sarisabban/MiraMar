@@ -1,4 +1,4 @@
-# MolecularTetris
+# MiraMar
 *De novo* cyclic protein polypeptide design using reinforcement learning.
 
 <p align="center"><img src="image.png" width="80%" height="80%" /></p>
@@ -19,10 +19,10 @@ The output of the environment play are two .pdb (protein databank) files called 
 To play by code (standard gymnasium setup):
 
 ```py
-from MolecularTetris import MolecularTetris
+from MiraMar import MiraMar
 
 # Call the environment
-env = MolecularTetris(render_mode='ansi')
+env = MiraMar(render_mode='ansi')
 
 # Information about the environment
 observation_space = env.observation_space
