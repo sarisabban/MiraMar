@@ -97,7 +97,7 @@ class MiraMar():
 		''' Export the molecule only '''
 		self.render(show=False, save=True, path=False)
 	def close(self):
-		''' Close the environemnt '''
+		''' Close and clear the environemnt '''
 		self.pose = None
 		return None
 	def RotationMatrix(self, thetaX, thetaY, thetaZ):
