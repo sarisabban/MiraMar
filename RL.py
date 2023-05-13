@@ -249,29 +249,19 @@ def train():
 				f.write(A + B + C + D + E + F + G + H + I + J + K)
 		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
 	# Export agent model
-#	torch.save(agent.state_dict(), 'agent.pth')
-
-
-
-
-
-
-
-
+	torch.save(agent, 'agent.pth')
 
 def play(filename='agent.pth'):
 	''' Play environment using a trained agent '''
-	env = MiraMar()
-	envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(1)])
 	# Import agent model
-	agent = Agent(envs).to('cpu')
 	agent = torch.load('agent.pth')
-#	agent = torch.load_state_dict(torch.load('agent.pth'))
 	agent.eval()
 	# Play game
-#	env = MiraMar()
+	env = MiraMar()
+#	envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(1)])
 	S, I = env.reset()
 	for t in range(20):
+		S = torch.Tensor(S).to('cuda')
 		A, Plog, E, q = agent.get_action_and_value(S)
 		S, R, T, U, I = env.step(A)
 		done = T + U
@@ -284,3 +274,7 @@ def main():
 	elif args.rl_play: play(filename=sys.argv[2])
 
 if __name__ == '__main__': main()
+
+
+
+play()
