@@ -90,11 +90,11 @@ The **rewards** are as follows:
 |Loop closure                   |Rtc   |n / N                             |If N-term to C-term distance < 1.5 Å the environment will end and a reward is given, shorter polypeptide give larger reward|
 
 The **stop conditions** are as follows:
-| Condition                     | Name | Values | Description           |
-|-------------------------------|------|--------|-----------------------|
-|Polypeptide length of i=N      |St    |0       |Termination: when the polypeptide can only reach a maximum length of N amino acids|
-|Self circle                    |Sr1   |Rt      |Truncation: if the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
-|Loop closure                   |Sr2   |Rtc     |Truncation: if the N-term to C-term distance < 1.5 Å|
+| Condition                     | Name | Reward Value | Description           |
+|-------------------------------|------|--------------|-----------------------|
+|Polypeptide length of i=N      |St    |0             |Termination: when the polypeptide can only reach a maximum length of N amino acids|
+|Self circle                    |Sr1   |Rt            |Truncation: if the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
+|Loop closure                   |Sr2   |Rtc           |Truncation: if the N-term to C-term distance < 1.5 Å|
 
 > __Note__
 > 
