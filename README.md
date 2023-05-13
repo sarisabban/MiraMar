@@ -51,7 +51,7 @@ You can use `env.render(show=False, save=True)` to save rather than show the env
 The **actions** are as follows:
 | Action   | Name | Values                   |
 |----------|------|--------------------------|
-|Amino Acid|AA    |Canonical and non-canonical D-amino acids and L-amino acids (52 actions)|
+|Amino acid|AA    |Canonical and non-canonical D-amino acids and L-amino acids (52 actions)|
 |Phi angle |P     |0-359 angles (360 actions)|
 |Psi angle |S     |0-359 angles (360 actions)|
 
