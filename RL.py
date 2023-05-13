@@ -14,7 +14,7 @@
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -u -B RL.py
+python3 -u -B RL.py -rl
 '''
 
 import sys
