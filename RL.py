@@ -29,33 +29,9 @@ import gymnasium as gym
 from MiraMar import MiraMar
 warnings.filterwarnings('ignore')
 
-env           = MiraMar()
-n_envs        = 4#32
-n_steps       = 1000
-timesteps     = 2000#10e6
-n_minibatches = 4
-epochs        = 16
-nodes         = 64
-seed          = 1
-lr            = 2.5e-4
-gamma         = 0.95
-lambd         = 0.95
-clip_coef     = 0.1
-vf_coef       = 0.5
-ent_coef      = 0.01
-max_grad_norm = 0.5
-target_kl     = 0.015
-log           = True
-
-parser = argparse.ArgumentParser(
-description='Reinforcement learning on the MiraMar environment')
-
-parser.add_argument('-rl', '--rl_train', action='store_true',
-help='Train a reinforcement learning agent')
-
-parser.add_argument('-rlp', '--rl_play', nargs='+',
-help='Have a trained agent play the game using the agent.pth file')
-
+parser = argparse.ArgumentParser(description='Reinforcement learning on the MiraMar environment')
+parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
+parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
 args = parser.parse_args()
 
 def make_env(env_id):
@@ -74,11 +50,11 @@ class Agent(torch.nn.Module):
 		super(Agent, self).__init__()
 		obs_shape = envs.single_observation_space.shape
 		self.network = torch.nn.Sequential(
-			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), nodes)),
+			layer_init(torch.nn.Linear(np.array(obs_shape).prod(), 64)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(nodes, nodes)),
+			layer_init(torch.nn.Linear(64, 64)),
 			torch.nn.ReLU(),
-			layer_init(torch.nn.Linear(nodes, 128)),
+			layer_init(torch.nn.Linear(64, 128)),
 			torch.nn.ReLU(),)
 		self.nvec = envs.single_action_space.nvec
 		self.actor = layer_init(torch.nn.Linear(128, self.nvec.sum()), std=0.01)
@@ -96,7 +72,25 @@ class Agent(torch.nn.Module):
 		return action.T, logprob.sum(0), entropy.sum(0), self.critic(hidden)
 
 def train():
-	# Fix seed to make all experiments reproducible
+	''' Train a PPO agent on the MiraMar environment '''
+	# Define variables
+	env           = MiraMar()
+	n_envs        = 4#32
+	n_steps       = 1000
+	timesteps     = 2000#10e6
+	n_minibatches = 4
+	epochs        = 16
+	seed          = 1
+	lr            = 2.5e-4
+	gamma         = 0.95
+	lambd         = 0.95
+	clip_coef     = 0.1
+	vf_coef       = 0.5
+	ent_coef      = 0.01
+	max_grad_norm = 0.5
+	target_kl     = 0.015
+	log           = True
+	# Fix seeds to make all experiments reproducible
 	random.seed(seed)
 	np.random.seed(seed)
 	torch.manual_seed(seed)
@@ -197,8 +191,7 @@ def train():
 				# Value loss
 				newvalue = newvalue.view(-1)
 				v_loss_unclipped = (newvalue - b_returns[mb_inds])**2
-				v_clipped = b_values[mb_inds] + torch.clamp(
-					newvalue - b_values[mb_inds], clip_coef, clip_coef,)
+				v_clipped = b_values[mb_inds] + torch.clamp(newvalue - b_values[mb_inds], clip_coef, clip_coef,)
 				v_loss_clipped = (v_clipped - b_returns[mb_inds])**2
 				v_loss_max = torch.max(v_loss_unclipped, v_loss_clipped)
 				v_loss = 0.5 * v_loss_max.mean()
@@ -221,6 +214,7 @@ def train():
 		y_pred, y_true = b_values.cpu().numpy(), b_returns.cpu().numpy()
 		var_y = np.var(y_true)
 		explained_var = np.nan if var_y == 0 else 1-np.var(y_true - y_pred) / var_y
+		# Time keeping
 		time_seconds = time.time() - time_start
 		time_update_seconds = round(time_seconds * (n_updates - update), 0)
 		time_update = datetime.timedelta(seconds=time_update_seconds)
@@ -252,7 +246,7 @@ def train():
 	torch.save(agent, 'agent.pth')
 
 def play(filename='agent.pth'):
-	''' Play environment using a trained agent '''
+	''' Play the MiraMar environment using a trained PPO agent '''
 	# Import agent model
 	agent = torch.load(filename)
 	agent.eval()
