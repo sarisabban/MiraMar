@@ -1,13 +1,13 @@
 # This algorithm is a derivation from CleanRL's MultiDescrete PPO script
 # 1. Install dependencies: pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose
-# 2. To train an agent (training time 7 days): python3 -B RL.py -rl
+# 2. To train an agent (training time 27 days): python3 -B RL.py -rl
 # 3. To play the environment using an agent: python3 -B RL.py -rlp agent.pth
 
 '''
 #!/bin/sh
 #SBATCH --job-name=Mira
 #SBATCH --partition=compsci
-#SBATCH --time=168:00:00
+#SBATCH --time=648:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
@@ -77,7 +77,7 @@ def train():
 	env           = MiraMar()
 	n_envs        = 64
 	n_steps       = 1024
-	timesteps     = 16e6
+	timesteps     = 144e6
 	n_minibatches = 4
 	epochs        = 16
 	seed          = 1
