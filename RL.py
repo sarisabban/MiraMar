@@ -241,6 +241,10 @@ def train():
 				J = f'Explained Variance: {exp_var:<30,}'
 				K = f'Remaining time: {time_update}\n'
 				f.write(A + B + C + D + E + F + G + H + I + J + K)
+			# Export agent model every 100 updates
+			if (update % 100 == 0): 
+				# Export agent model
+				torch.save(agent, f'agent_{update}.pth')
 		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
 	# Export agent model
 	torch.save(agent, 'agent.pth')
