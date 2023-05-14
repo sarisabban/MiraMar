@@ -75,9 +75,9 @@ def train():
 	''' Train a PPO agent on the MiraMar environment '''
 	# Define variables
 	env           = MiraMar()
-	n_envs        = 4#32
-	n_steps       = 1000
-	timesteps     = 2000#10e6
+	n_envs        = 64
+	n_steps       = 1024
+	timesteps     = 16e6
 	n_minibatches = 4
 	epochs        = 16
 	seed          = 1
