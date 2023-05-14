@@ -1,9 +1,20 @@
-# This algorithm is a derivation from CleanRL's MultiDescrete PPO script
-# 1. Install dependencies: pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose
-# 2. To train an agent (training time 27 days): python3 -B RL.py -rl
-# 3. To play the environment using an agent: python3 -B RL.py -rlp agent.pth
-
 '''
+INSTRUCTIONS:
+=============
+This algorithm is a derivation from CleanRL's MultiDescrete PPO script
+https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscrete.py
+
+1. Install dependencies:
+	`pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose`
+
+2. To train an agent (training time 27 days):
+	`python3 -B RL.py -rl`
+
+3. To play the environment using an agent:
+	`python3 -B RL.py -rlp agent.pth`
+
+The following is a SLURM job submission script to train the agent on a high performance computer
+----------------------------
 #!/bin/sh
 #SBATCH --job-name=Mira
 #SBATCH --partition=compsci
@@ -15,6 +26,7 @@
 cd $SLURM_SUBMIT_DIR
 
 python3 -u -B RL.py -rl
+----------------------------
 '''
 
 import sys
@@ -185,8 +197,8 @@ def train():
 				mb_adv = b_advantages[mb_inds]
 				mb_advantages = (mb_adv - mb_adv.mean()) / (mb_adv.std() + 1e-8)
 				# Policy loss
-				pg_loss1 = -mb_advantages*ratio
-				pg_loss2 = -mb_advantages*torch.clamp(ratio,1-clip_coef,1+clip_coef)
+				pg_loss1 = -mb_advantages * ratio
+				pg_loss2 = -mb_advantages * torch.clamp(ratio, 1-clip_coef, 1+clip_coef)
 				pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 				# Value loss
 				newvalue = newvalue.view(-1)
@@ -202,7 +214,7 @@ def train():
 				# Backpropagation & gradient descent
 				optimizer.zero_grad()
 				loss.backward()
-				torch.nn.utils.clip_grad_norm_(agent.parameters(),max_grad_norm)
+				torch.nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
 				optimizer.step()
 				# Aproximate KL divergence
 				with torch.no_grad():
