@@ -50,7 +50,7 @@ log           = True
 parser = argparse.ArgumentParser(
 description='Reinforcement learning on the MiraMar environment')
 
-parser.add_argument('-rl', '--rl_train', nargs='+',
+parser.add_argument('-rl', '--rl_train', action='store_true',
 help='Train a reinforcement learning agent')
 
 parser.add_argument('-rlp', '--rl_play', nargs='+',
@@ -268,8 +268,7 @@ def play(filename='agent.pth'):
 	env.render()
 
 def main():
-	print(sys.argv[1])
-#	if args.rl_train:  train()
-#	elif args.rl_play: play(filename=sys.argv[2])
+	if args.rl_train:  train()
+	elif args.rl_play: play(filename=sys.argv[2])
 
 if __name__ == '__main__': main()
