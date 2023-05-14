@@ -251,20 +251,19 @@ def train():
 	# Export agent model
 	torch.save(agent, 'agent.pth')
 
-def play(filename='agent.pth'):
+def play(filename='agent.pth', seed=None):
 	''' Play environment using a trained agent '''
 	# Import agent model
-	agent = torch.load('agent.pth')
+	agent = torch.load(filename)
 	agent.eval()
 	# Play game
 	env = MiraMar()
-#	envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(1)])
-	S, I = env.reset()
+	S, I = env.reset(seed=seed)
 	for t in range(20):
-		S = torch.Tensor(S).to('cuda')
-		A, Plog, E, q = agent.get_action_and_value(S)
-		S, R, T, U, I = env.step(A)
-		done = T + U
+		S = torch.Tensor([S]).to('cpu')
+		A, _, _, _ = agent.get_action_and_value(S)
+		S, R, T, U, I = env.step(A[0].numpy())
+		done = bool(T + U)
 		if done:
 			env.render()
 			break
@@ -274,7 +273,3 @@ def main():
 	elif args.rl_play: play(filename=sys.argv[2])
 
 if __name__ == '__main__': main()
-
-
-
-play()
