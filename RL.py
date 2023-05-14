@@ -10,10 +10,10 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 2. To train an agent (training time 27 days):
 	`python3 -B RL.py -rl`
 
-3. To play the environment using an agent:
+3. To play the environment using a trained agent:
 	`python3 -B RL.py -rlp agent.pth`
 
-The following is a SLURM job submission script to train the agent on a high performance computer
+The following is a SLURM job submission script to train the agent on a high performance supercomputer
 ----------------------------
 #!/bin/sh
 #SBATCH --job-name=Mira
