@@ -430,7 +430,7 @@ class MiraMar():
 		R = 0
 		# R1 - Reward for moving forward
 		if self.i == 0: T = 360
-		if self.T > T:  R += -1/20*self.i + 1
+		if self.T > T:  R += (-1/20)*self.i + 1
 		else:           R -= 1
 		self.T = T
 		# R2 - Penalty for distance from ellipse surface
