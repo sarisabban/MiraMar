@@ -81,7 +81,7 @@ The **features** are as follows:
 The **rewards** are as follows:
 | Reward                        | Name | Values                           | Description           |
 |-------------------------------|------|----------------------------------|-----------------------|
-|Forward/Backward move          |R1    |(-1/14)*i + (15/14) or -1         |When current Cα angle is less than previous angle (moving forward) + reward (diminishes 1->0 with increasing molecule size) else -1 reward|
+|Forward/Backward move          |R1    |(-1/20)*i + 1 or -1               |When current Cα angle is less than previous angle (moving forward) + reward (diminishes 1->0 with increasing molecule size) else -1 reward|
 |Cα Distance                    |R2    |-0.1*distance<sup>2</sup>         |Cα distance from ellipse surface (more negative further away)|
 |Cα outside/inside ellipse      |R3    |±1                                |If the Cα is outside the ellipse +1 rewards|
 |Moving clockwise/anti-clockwise|R4    |±1                                |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
