@@ -90,7 +90,7 @@ def train():
 	n_envs        = 64
 	n_steps       = 1024
 	timesteps     = 144e6
-	n_minibatches = 4
+	n_minibatches = 128
 	epochs        = 16
 	seed          = 1
 	lr            = 2.5e-4
