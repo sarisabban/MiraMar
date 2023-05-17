@@ -13,7 +13,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 3. To play the environment using a trained agent:
 	`python3 -B RL.py -rlp agent.pth`
 
-The following is a SLURM job submission script to train the agent on a high performance supercomputer
+The following is a SLURM job submission script to train the agent on a high performance supercomputer:
 ----------------------------
 #!/bin/sh
 #SBATCH --job-name=Mira
