@@ -7,7 +7,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 1. Install dependencies:
 	`pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose`
 
-2. To train an agent (training time 27 days):
+2. To train an agent (training time 30 days):
 	`python3 -B RL.py -rl`
 
 3. To play the environment using a trained agent:
