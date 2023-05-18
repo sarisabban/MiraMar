@@ -13,7 +13,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 3. To play the environment using a trained agent:
 	`python3 -B RL.py -rlp agent.pth`
 
-The following is a SLURM job submission script to train the agent on a high performance supercomputer:
+The following is a SLURM and PBS job submission scripts to train the agent on a high performance supercomputer:
 ----------------------------
 #!/bin/sh
 #SBATCH --job-name=Mira
@@ -26,9 +26,6 @@ The following is a SLURM job submission script to train the agent on a high perf
 cd $SLURM_SUBMIT_DIR
 
 python3 -u -B RL.py -rl
-----------------------------
-
-The following is a PBS job submission script to train the agent on a high performance supercomputer:
 ----------------------------
 #!/bin/bash
 #PBS -N Mira
@@ -56,7 +53,7 @@ import gymnasium as gym
 from MiraMar import MiraMar
 warnings.filterwarnings('ignore')
 
-parser = argparse.ArgumentParser(description='Reinforcement learning on the MiraMar environment')
+parser = argparse.ArgumentParser(description='Reinforcement learning training on the MiraMar environment')
 parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
 parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
 args = parser.parse_args()
