@@ -287,6 +287,9 @@ def play(filename='agent.pth'):
 		A, _, _, _ = agent.get_action_and_value(S)
 		S, R, T, U, I = env.step(A[0].numpy())
 		done = bool(T or U)
+	print('Actions:', I['actions'])
+	print('Rewards:', I['rewards'])
+	print('Episode:', I['episode'])
 	env.render()
 
 def main():
