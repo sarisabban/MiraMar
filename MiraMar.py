@@ -423,7 +423,7 @@ class MiraMar():
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
 		hit, Trgs, direction, CA_t = self.target_logic(AA)
-		SS_size = len(self.pose.AminoAcids[AA]['Vectors'])
+		SC_size = len(self.pose.AminoAcids[AA]['Vectors'])
 		###########################
 		##### Reward Function #####
 		###########################
@@ -450,7 +450,7 @@ class MiraMar():
 		self.F1P = F1P
 		# Rr - Target rewards
 		if   hit == 0: R += 0                          # Too far
-		elif hit == 1: R += (-9/29)*SS_size + (299/29) # Hit
+		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
 		elif hit == 2: R -= 1                          # No rotamers (wrong AA)
 		elif hit == 3: R -= 10                         # Miss
 		###########################
