@@ -18,13 +18,28 @@ The following is a SLURM job submission script to train the agent on a high perf
 #!/bin/sh
 #SBATCH --job-name=Mira
 #SBATCH --partition=compsci
-#SBATCH --time=648:00:00
+#SBATCH --time=720:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
 
 cd $SLURM_SUBMIT_DIR
 
+python3 -u -B RL.py -rl
+----------------------------
+
+The following is a PBS job submission script to train the agent on a high performance supercomputer:
+----------------------------
+#!/bin/bash
+#PBS -N Mira
+#PBS -q thin
+#PBS -l walltime=720:00:00
+#PBS -l select=1:ncpus=24
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
+
+conda activate RL
 python3 -u -B RL.py -rl
 ----------------------------
 '''
