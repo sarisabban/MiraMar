@@ -402,8 +402,8 @@ class MiraMar():
 	def step(self, actions):
 		''' Play one step, add an amino acid and define its phi/psi angles '''
 		AA  = self.get_residue_meanings(actions[0])
-		phi = actions[1]
-		psi = actions[2]
+		phi = self.get_angle_meanings(actions[1])
+		psi = self.get_angle_meanings(actions[2])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
