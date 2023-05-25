@@ -73,7 +73,7 @@ The **features** are as follows:
 |Φ angle for lowest distance to target|ft-Φ     |[0, 7]    |The phi action that will result in the least sidechain distance to the target|
 |Ψ angle for lowest distance to target|ft-Ψ     |[0, 7]    |The psi action that will result in the least sidechain distance to the target|
 |Expected future distance to target   |ft       |[0, 13]   |The predicted distance to target that will result if the recommended phi and psi actions were taken|
-|Distance to C-term                   |C-term   |[0, 1000] |The distance from N-term to C-term (for loop closure)|
+|Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 |Targets                              |Trgs     |[3, 10]   |The number of reminaing targets|
 |Direction of target                  |direction|[0, 1]    |0 if target is away from side chain, 1 if target is in the same direction as the side chain|
 |Distance to target                   |Ca_t     |[0, 13]   |Distabce from Cα to target|
