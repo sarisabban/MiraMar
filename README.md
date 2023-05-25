@@ -143,4 +143,10 @@ info =
 ```
 
 ## Training:
-Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup
+Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup.
+
+
+
+
+TODO:
+optimise reward function / end of state function / observation
