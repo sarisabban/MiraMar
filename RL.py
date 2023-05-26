@@ -106,7 +106,7 @@ def train():
 	epochs        = 16
 	seed          = 1
 	lr            = 2.5e-4
-	gamma         = 0.95
+	gamma         = 0.99
 	lambd         = 0.95
 	clip_coef     = 0.1
 	vf_coef       = 0.5
@@ -121,7 +121,7 @@ def train():
 	torch.backends.cudnn.deterministic = True
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	date = datetime.datetime.now().strftime('%d-%b-%Y @ %H:%M:%S')
-	print('Training on:', device, '||', 'Started on:', date, '\n' + '='*25)
+	print('Training on:', device, '||', 'Started on:', date, '\n' + '='*40)
 	# Environment setup
 	envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(n_envs)])
 	agent = Agent(envs).to(device)
@@ -242,6 +242,7 @@ def train():
 		time_seconds = time.time() - time_start
 		time_update_seconds = round(time_seconds * (n_updates - update), 0)
 		time_update = datetime.timedelta(seconds=time_update_seconds)
+		time_seconds = round(time_seconds, 3)
 		if log:
 			with open('train.log', 'a') as f:
 				Gt_mean = round(np.array(Gts).mean(), 3)
@@ -253,18 +254,19 @@ def train():
 				KL      = round(approx_kl.item(), 3)
 				Clip    = round(clipfracs[-1], 3)
 				exp_var = round(explained_var, 3)
-				A = f'Update: {update:,}/{n_updates:<30,}'
-				B = f'Steps: {global_step:<30,}'
-				C = f'Returns: {Gt_mean:,} +- {Gt_SD:<30,}'
-				D = f'A_loss: {A_loss:<30,}'
-				E = f'C_loss: {C_loss:<30,}'
-				F = f'Entropy loss: {Entropy:<30,}'
-				G = f'Final loss: {Loss:<30,}'
-				H = f'KL: {KL:<30,}'
-				I = f'Clip: {Clip:<30,}'
-				J = f'Explained Variance: {exp_var:<30,}'
-				K = f'Remaining time: {time_update}\n'
-				f.write(A + B + C + D + E + F + G + H + I + J + K)
+				A = f'Update: {update:,}/{n_updates:<10,}'
+				B = f'Steps: {global_step:<10,}'
+				C = f'Returns: {Gt_mean:,} +- {Gt_SD:<10,}'
+				D = f'A_loss: {A_loss:<10,}'
+				E = f'C_loss: {C_loss:<10,}'
+				F = f'Entropy loss: {Entropy:<10,}'
+				G = f'Final loss: {Loss:<10,}'
+				H = f'KL: {KL:<10,}'
+				I = f'Clip: {Clip:<10,}'
+				J = f'Explained Variance: {exp_var:<10,}'
+				K = f'Time per update: {time_seconds:<10,}s'
+				L = f'Remaining time: {time_update}\n'
+				f.write(A + B + C + D + E + F + G + H + I + J + K + L)
 			# Export agent model every 100 updates
 			if (update % 100 == 0): 
 				# Export agent model
