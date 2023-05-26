@@ -268,7 +268,7 @@ def train():
 				L = f'Remaining time: {time_update}\n'
 				f.write(A + B + C + D + E + F + G + H + I + J + K + L)
 			# Export agent model every 100 updates
-			if (update % 100 == 0): 
+			if (update % 50 == 0): 
 				# Export agent model
 				torch.save(agent, f'agent_{update}.pth')
 		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
