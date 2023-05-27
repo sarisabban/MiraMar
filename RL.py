@@ -101,7 +101,7 @@ def train():
 	env           = MiraMar()
 	n_envs        = 64
 	n_steps       = 1024
-	timesteps     = 144e6
+	timesteps     = 10e6
 	n_minibatches = 128
 	epochs        = 16
 	seed          = 1
@@ -148,7 +148,7 @@ def train():
 		time_start = time.time()
 		optimizer.param_groups[0]['lr'] = (1.0 - (update - 1.0) / n_updates) * lr
 		# Steps to generate a dataset
-		Gts = []
+		Gts, Lns = [], []
 		for step in range(n_steps):
 			global_step += 1 * n_envs
 			obs[step] = next_obs
@@ -169,7 +169,9 @@ def train():
 			if 'final_info' in info.keys():
 				for e in info['final_info'][index]:
 					Gt = round(e['episode']['r'], 3)
+					Ln = round(e['episode']['l'], 3)
 					Gts.append(Gt)
+					Lns.append(Ln)
 		# Bootstrap value using GAE
 		with torch.no_grad():
 			next_value = agent.get_value(next_obs).reshape(1, -1)
@@ -247,6 +249,8 @@ def train():
 			with open('train.log', 'a') as f:
 				Gt_mean = round(np.array(Gts).mean(), 3)
 				Gt_SD   = round(np.array(Gts).std(), 3)
+				Ln_mean = round(np.array(Lns).mean(), 3)
+				Ln_SD   = round(np.array(Lns).std(), 3)
 				A_loss  = round(pg_loss.item(), 3)
 				C_loss  = round(v_loss.item(), 3)
 				Entropy = round(entropy_loss.item(), 3)
@@ -257,16 +261,17 @@ def train():
 				A = f'Update: {update:,}/{n_updates:<10,}'
 				B = f'Steps: {global_step:<10,}'
 				C = f'Returns: {Gt_mean:,} +- {Gt_SD:<10,}'
-				D = f'A_loss: {A_loss:<10,}'
-				E = f'C_loss: {C_loss:<10,}'
-				F = f'Entropy loss: {Entropy:<10,}'
-				G = f'Final loss: {Loss:<10,}'
-				H = f'KL: {KL:<10,}'
-				I = f'Clip: {Clip:<10,}'
-				J = f'Explained Variance: {exp_var:<10,}'
-				K = f'Time per update: {time_seconds:<10,}s'
-				L = f'Remaining time: {time_update}\n'
-				f.write(A + B + C + D + E + F + G + H + I + J + K + L)
+				D = f'Lengths: {Ln_mean:,} +- {Ln_SD:<10,}'
+				E = f'A_loss: {A_loss:<10,}'
+				F = f'C_loss: {C_loss:<10,}'
+				G = f'Entropy loss: {Entropy:<10,}'
+				H = f'Final loss: {Loss:<10,}'
+				I = f'KL: {KL:<10,}'
+				J = f'Clip: {Clip:<10,}'
+				K = f'Explained Variance: {exp_var:<10,}'
+				L = f'Seconds per update: {time_seconds:<10,}'
+				M = f'Remaining time: {time_update}\n'
+				f.write(A + B + C + D + E + F + G + H + I + J + K + L + M)
 			# Export agent model every 100 updates
 			if (update % 50 == 0): 
 				# Export agent model
