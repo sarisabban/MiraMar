@@ -418,6 +418,7 @@ class MiraMar():
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PHI')
 		fCA = oriA + YA * 3.1870621267869894
 		# Projected angle and distance of current CA atom
+		N  = self.pose.GetAtom(self.i, 'N')
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
 		T, P, _, d, radius = self.project(CA)
@@ -428,8 +429,9 @@ class MiraMar():
 		###########################
 		##### Reward Function #####
 		###########################
-		R = 0
-		R = -(2/71.7**2)*d**2+1
+		R = 0.0
+		if self.i != 0:
+			R = -(2/71.7**2)*d**2+1
 #		# Rr - Target rewards
 #		if   hit == 0: R += 0                          # Too far
 #		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
@@ -443,8 +445,11 @@ class MiraMar():
 		elif (self.i % 2) == 0: OE = 1
 		# Determine lowest fT and lowest fd
 		fT_aP,fT_aS,fT_v,fd_aP,fd_aS,fd_v,Tr_aP,Tr_aS,Tr_v = self.fT_fd_ft()
-		# Distance to C-term for loop closure
-		C_term = np.linalg.norm(fCA - self.pose.GetAtom(0, 'C'))
+		# Distance from N-term to C-term for loop closure
+		C_term = np.linalg.norm(C - self.pose.GetAtom(0, 'N'))
+		# The switch
+		start_F2 = np.linalg.norm(F2 - self.pose.GetAtom(0, 'C'))
+		if T < 180 and self.i != 0 and C_term > start_F2: self.switch = 1
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
@@ -464,19 +469,10 @@ class MiraMar():
 		if 1 in CHECK: Sr = True
 		# Sr2 - End game if Tt < Tt-1
 		if self.T < T: Sr = True
-
-
-
-
-
-#		# Sr3: loop closure
-#		if 1 in CHECK and (self.T > T):
-#			Sr = True
-#			R = +100
-
-
-
-
+		# Sr3: loop closure
+		if T < 45 and self.i > 5 and self.switch == 1 and 0.5 < C_term < 3:
+			Sr = True
+			R = +100
 		if self.i != 0: self.T = T
 		###########################
 		####### Information #######
