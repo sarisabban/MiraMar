@@ -21,9 +21,9 @@ class MiraMar():
 		self.bins = 360
 		self.observation_space = gym.spaces.Box(
 			low=np.array(
-			[0, 0,0,  0,-50,0,  0,  0,-50,  0]),
+			[0, 0,0,  0,-50,0,  0,  0,  0]),
 			high=np.array(
-			[1,20,1,360, 50,1,360,360, 50,100]))
+			[1,20,1,360, 50,1,360,360,100]))
 		self.action_space = gym.spaces.MultiDiscrete(
 			[self.bins, self.bins])
 		self.reward_range = (-np.inf, np.inf)
