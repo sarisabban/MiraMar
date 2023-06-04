@@ -64,37 +64,25 @@ The **features** are as follows:
 |Angle of Cα                          |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
 |Distance of Cα                       |d        |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
 |Switch                               |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
-|Φ angle for lowest angle T           |Ta-Φ     |[0, 7]    |The phi action that will result in the greatest leap forward (most reduced angle)|
-|Ψ angle for lowest angle T           |Ta-Ψ     |[0, 7]    |The psi action that will result in the greatest leap forward (most reduced angle)|
-|Expected future angle T              |fT       |[0, 360]  |The predicted angle that will result if the recommended phi and psi actions were taken|
 |Φ angle for lowest distance          |da-Φ     |[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
 |Ψ angle for lowest distance          |da-Ψ     |[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
-|Expected future distance mag         |fd       |[-50, 50] |The predicted distance that will result if the recommended phi and psi actions were taken|
-|Φ angle for lowest distance to target|ft-Φ     |[0, 7]    |The phi action that will result in the least sidechain distance to the target|
-|Ψ angle for lowest distance to target|ft-Ψ     |[0, 7]    |The psi action that will result in the least sidechain distance to the target|
-|Expected future distance to target   |ft       |[0, 13]   |The predicted distance to target that will result if the recommended phi and psi actions were taken|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
-|Targets                              |Trgs     |[3, 10]   |The number of reminaing targets|
-|Direction of target                  |direction|[0, 1]    |0 if target is away from side chain, 1 if target is in the same direction as the side chain|
-|Distance to target                   |Ca_t     |[0, 13]   |Distabce from Cα to target|
 
 The **rewards** are as follows:
-| Reward                        | Name | Values                           | Description           |
-|-------------------------------|------|----------------------------------|-----------------------|
-|Forward/Backward move          |R1    |(-1/20)*i + 1 or -1               |When current Cα angle is less than previous angle (moving forward) + reward (diminishes 1->0 with increasing molecule size) else -1 reward|
-|Cα Distance                    |R2    |-0.1*distance<sup>2</sup>         |Cα distance from ellipse surface (more negative further away)|
-|Cα outside/inside ellipse      |R3    |±1                                |If the Cα is outside the ellipse +1 rewards|
-|Moving clockwise/anti-clockwise|R4    |±1                                |If the Cα if moving away from the start poisition before the switch and towards the start position after the switch|
-|Target rewards                 |Rr    |(-9/29)*SC_size + (299/29) hit or -10 miss or -1 wrong AA or 0 far|If the agent hits a target + reward (diminishes 10->1 with increasing sidechain size), if failed to hit target because it chose the wrong amino acid -1 penalty, if it passed the target without hitting -10 penalty, if the target is too far away 0 reward|
-|Pre-mature end                 |Rt    |i - N                             |If the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
-|Loop closure                   |Rtc   |n / N                             |If N-term to C-term distance < 1.5 Å the environment will end and a reward is given, shorter polypeptide give larger reward|
+| Reward                        | Name | Values                             | Description           |
+|-------------------------------|------|------------------------------------|-----------------------|
+|Cα Distance                    |R     |(-2/71.7<sup>2</sup>)d<sup>2</sup>+1|Cα distance from ellipse surface|
+|Loop closure                   |Rc    |+100                                |If Sr3 condition is met for loop closure|
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Reward Value | Description           |
 |-------------------------------|------|--------------|-----------------------|
-|Polypeptide length of i=N      |St    |0             |Termination: when the polypeptide can only reach a maximum length of N amino acids|
-|Self circle                    |Sr1   |Rt            |Truncation: if the peptide chain makes a circle around itself the environment will end and a penalty is given, larger the chain the less the penalty|
-|Loop closure                   |Sr2   |Rtc           |Truncation: if the N-term to C-term distance < 1.5 Å|
+|Polypeptide length of i=N      |St    |0             |Termination: when the polypeptide reachs a maximum length of N amino acids|
+|Self loop                      |Sr1   |0             |Truncation: if the peptide chain makes a circle around itself the environment will end|
+|Moving backwards               |Sr2   |0             |Truncation: if the Tt < Tt-1|
+
+
+|Loop closure                   |Sr3   |R c           |Truncation: if the N-term to C-term distance < 1.5 Å|
 
 > __Note__
 > 
@@ -144,9 +132,3 @@ info =
 
 ## Training:
 Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup.
-
-
-
-
-TODO:
-optimise reward function / end of state function / observation
