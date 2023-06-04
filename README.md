@@ -45,7 +45,7 @@ env.export() # Export only the molecule
 ```
 A step adds an amino acid and rotates its Φ and Ψ torsion angles as such `env.step([AMINO ACID, PHI, PSI])`.
 
-You can use `env.render(show=False, save=True)` to save rather than show the environment output, must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the venv's directory (python's virtual environment), open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to be true (all small letters).
+You can use `env.render(show=False, save=True)` to save rather than show the environment output, you must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the python venv's directory (python's virtual environment), open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to *true* (all small letters).
 
 ## Environment details:
 The **actions** are as follows:
@@ -69,18 +69,22 @@ The **features** are as follows:
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
-| Reward                        | Name | Values                             | Description           |
-|-------------------------------|------|------------------------------------|-----------------------|
-|Cα Distance                    |R     |(-2/71.7<sup>2</sup>)d<sup>2</sup>+1|Cα distance from ellipse surface|
-|Loop closure                   |R     |+100                                |If Sr3 condition is met for loop closure|
+| Reward                        | Name | Values                    | Description           |
+|-------------------------------|------|---------------------------|-----------------------|
+|Cα Distance                    |R1    |${-2 \over 71.7^2} d^2 + 1$|Cα distance d from ellipse surface (intermediate reward shape)|
+|Loop closure                   |Rc    |+100                       |If Sr3 condition is met for loop closure (actual episodic reward)|
+
+The reward is +100 when the loop closes and the episode terminates, with R1 intermediate rewards shaped to assist the agent into finding the terminal (loop closing) state.
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Reward Value | Description           |
 |-------------------------------|------|--------------|-----------------------|
-|Polypeptide length of i=N      |St    |0             |Termination: when the polypeptide reachs a maximum length of N amino acids|
-|Self loop                      |Sr1   |0             |Truncation: if the peptide chain makes a circle around itself the environment will end|
-|Moving backwards               |Sr2   |0             |Truncation: if the T<sub>t</sub> < T<sub>t-1</sub>|
-|Loop closure                   |Sr3   |+100          |Truncation: if the N-term to C-term distance between 0.0 and 3 Å|
+|Polypeptide length i=N         |St    |R1            |Termination: when the polypeptide reachs a maximum length of N amino acids|
+|Self loop                      |Sr1   |R1            |Truncation: if the peptide chain makes a circle around itself the environment will end|
+|Moving backwards               |Sr2   |R1            |Truncation: if the T<sub>t</sub> < T<sub>t-1</sub>|
+|Loop closure                   |Sr3   |Rc            |Truncation: if the N-term to C-term distance between 0.0 and 3 Å|
+
+These termination and turnication conditions ensure that low rewards occure when sub-optimal molecules are built.
 
 > __Note__
 > 
