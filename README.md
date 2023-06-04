@@ -82,7 +82,7 @@ The **stop conditions** are as follows:
 |Moving backwards               |Sr2   |0             |Truncation: if the Tt < Tt-1|
 
 
-|Loop closure                   |Sr3   |R c           |Truncation: if the N-term to C-term distance < 1.5 Å|
+|Loop closure                   |Sr3   |Rc            |Truncation: if the N-term to C-term distance < 1.5 Å (working on it)|
 
 > __Note__
 > 
