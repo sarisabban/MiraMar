@@ -20,12 +20,9 @@ class MiraMar():
 		''' Initialise global variables '''
 		self.bins = 360
 		self.observation_space = gym.spaces.Box(
-			low=np.array(
-			[0, 0,0,  0,-50,0,  0,  0,  0]),
-			high=np.array(
-			[1,20,1,360, 50,1,360,360,100]))
-		self.action_space = gym.spaces.MultiDiscrete(
-			[self.bins, self.bins])
+			low=np.array( [0,  0,  0,  0,  0,  0,  0,  0,  0]),
+			high=np.array([1, 20,  1,360,100,  1,360,360,100]))
+		self.action_space = gym.spaces.MultiDiscrete([self.bins, self.bins])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.seed = None
@@ -417,7 +414,7 @@ class MiraMar():
 		# Calculating future CA
 		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PHI')
 		fCA = oriA + YA * 3.1870621267869894
-		# Projected angle and distance of current CA atom
+		# Projected angles and distances of current and future CA atoms
 		N  = self.pose.GetAtom(self.i, 'N')
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
@@ -431,7 +428,7 @@ class MiraMar():
 		###########################
 		R = 0.0
 		if self.i != 0:
-			R = -(2/71.7**2)*d**2+1
+			R = -(2 / 71.7**2) * d**2 + 1
 #		# Rr - Target rewards
 #		if   hit == 0: R += 0                          # Too far
 #		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
