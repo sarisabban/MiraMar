@@ -90,12 +90,12 @@ The **stop conditions** are as follows:
 
 ## The information output:
 When the environment is at the initial state right after `env.reset()`:
-```
+```py
 info = {}
 ```
 
 When the environment is not at the terminal state, the info is structured as follows:
-```
+```py
 info =
 	{
 	'actions':[list of each step's actions],
@@ -106,7 +106,7 @@ info =
 ```
 
 When the environment is at the terminal state, the info is structured as follows:
-```
+```py
 info = 
 	{
 	'actions':[list of each step's actions],
