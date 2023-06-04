@@ -21,11 +21,11 @@ class MiraMar():
 		self.bins = 360
 		self.observation_space = gym.spaces.Box(
 			low=np.array(
-			[0, 0,0,  0,-50,0,  0,  0,  0,  0,  0,-50,  0,  0, 0,-50, 3,0, 0]),
+			[0, 0,0,  0,-50,0,  0,  0,-50,  0]),
 			high=np.array(
-			[1,20,1,360, 50,1,360,360,360,360,360, 50,360,360,13, 50,10,1,13]))
+			[1,20,1,360, 50,1,360,360, 50,100]))
 		self.action_space = gym.spaces.MultiDiscrete(
-			[52, self.bins, self.bins])
+			[self.bins, self.bins])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.seed = None
@@ -322,7 +322,7 @@ class MiraMar():
 			self.future_output = output
 			solution = scipy.optimize.minimize(
 				self.future,
-				(180, 180),
+				(56, 220),
 				bounds=((0.00, 359.99), (0.00, 359.99)),
 				method='SLSQP')
 			results.append(solution.x[0])
@@ -401,9 +401,9 @@ class MiraMar():
 		return(S, info)
 	def step(self, actions):
 		''' Play one step, add an amino acid and define its phi/psi angles '''
-		AA  = self.get_residue_meanings(actions[0])
-		phi = self.get_angle_meanings(actions[1])
-		psi = self.get_angle_meanings(actions[2])
+		AA  = 'G'#self.get_residue_meanings(actions[0])
+		phi = self.get_angle_meanings(actions[0])
+		psi = self.get_angle_meanings(actions[1])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -411,48 +411,30 @@ class MiraMar():
 		return(self.SnR(start, F1, F2, e, AA.upper()))
 	def SnR(self, start, F1, F2, e, AA):
 		''' Return the state features and rewards after each game step '''
+		if self.i == 0: T = 360
 		# Maximum possible size of polypeptide
 		MAX = 20
 		# Calculating future CA
-		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PSI')
-		fCA = oriA + YA * 0.9526475062940741
+		oriA, XA, YA, ZA = self.AminoAcidOri(ori='PHI')
+		fCA = oriA + YA * 3.1870621267869894
 		# Projected angle and distance of current CA atom
 		CA = self.pose.GetAtom(self.i, 'CA')
 		C  = self.pose.GetAtom(self.i, 'C')
 		T, P, _, d, radius = self.project(CA)
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
-		hit, Trgs, direction, CA_t = self.target_logic(AA)
-		SC_size = len(self.pose.AminoAcids[AA]['Vectors'])
+#		hit, Trgs, direction, CA_t = self.target_logic(AA)
+#		SC_size = len(self.pose.AminoAcids[AA]['Vectors'])
 		###########################
 		##### Reward Function #####
 		###########################
 		R = 0
-		# R1 - Reward for moving forward
-		if self.i == 0: T = 360
-		if self.T > T:  R += (-1/20)*self.i + 1
-		else:           R -= 1
-		self.T = T
-		# R2 - Penalty for distance from ellipse surface
-		R -= 0.1 * d**2
-		# R3 - Reward for being outside ellipse
-		F1CA = np.linalg.norm(F1 - CA)
-		F2CA = np.linalg.norm(F2 - CA)
-		F1P = np.linalg.norm(F1 - P)
-		F2P = np.linalg.norm(F2 - P)
-		if F1CA > F1P and F2CA > F2P: R += 1
-		else:                         R -= 1
-		# R4 - Reward for going around ellipse clockwise
-		if T < 180 and self.i != 0: self.switch = 1
-		if   self.switch == 0 and self.F1P < F1P: R += 1
-		elif self.switch == 1 and self.F1P > F1P: R += 1
-		else:                                     R -= 1
-		self.F1P = F1P
-		# Rr - Target rewards
-		if   hit == 0: R += 0                          # Too far
-		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
-		elif hit == 2: R -= 1                          # No rotamers (wrong AA)
-		elif hit == 3: R -= 10                         # Miss
+		R = -(2/71.7**2)*d**2+1
+#		# Rr - Target rewards
+#		if   hit == 0: R += 0                          # Too far
+#		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
+#		elif hit == 2: R -= 1                          # No rotamers (wrong AA)
+#		elif hit == 3: R -= 10                         # Miss
 		###########################
 		######## Features #########
 		###########################
@@ -466,35 +448,36 @@ class MiraMar():
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			fT_aP, fT_aS, fT_v,
-			fd_aP, fd_aS, fd_v,
-			Tr_aP, Tr_aS, Tr_v,
-			C_term, Trgs, direction, CA_t])
+			fd_aP, fd_aS,
+			C_term])
 		###########################
 		### End State Condition ###
 		###########################
 		St, Sr = False, False
 		# St - If polypeptide reaches max amino acids
-		if self.i >= MAX:
-			St = True
+		if self.i >= MAX: St = True
 		# Sr1 - End game if the chain made a circle onto itself
 		CAs   = [self.pose.GetAtom(x, 'CA') for x in range(self.i)]
 		VECs  = [CA - fCA for CA in CAs]
 		MAGs  = [np.linalg.norm(VEC) for VEC in VECs]
-		CHECK = [1 if x < 1.5 else 0 for x in MAGs]
-		if 1 in CHECK:
-			Sr = True
-			# Rt - Reward at this end state only
-			R = self.i - MAX
-		# Sr2 - End game if N-term to C-term distance < 1.5
-		N_term = self.pose.GetAtom(0, 'N')
-		C_term = self.pose.GetAtom(self.i, 'C')
-		vNC = C_term - N_term
-		distance = np.linalg.norm(vNC)
-		if distance < 1.5:
-			Sr = True
-			# Rtc - Reward at this end state only
-			R = len(self.pose.data['Amino Acids']) / MAX
+		CHECK = [1 if x < 2.0 else 0 for x in MAGs]
+		if 1 in CHECK: Sr = True
+		# Sr2 - End game if Tt < Tt-1
+		if self.T < T: Sr = True
+
+
+
+
+
+#		# Sr3: loop closure
+#		if 1 in CHECK and (self.T > T):
+#			Sr = True
+#			R = +100
+
+
+
+
+		if self.i != 0: self.T = T
 		###########################
 		####### Information #######
 		###########################
