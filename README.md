@@ -59,30 +59,28 @@ The **features** are as follows:
 | Feature                             | Name    | Values   | Description           |
 |-------------------------------------|---------|----------|-----------------------|
 |Eccentricity                         |e        |[0, 1]    |Eccentricity of the ellipse|
-|Index of step                        |i        |[0, 15]   |The index of the state step|
+|Index of step                        |i        |[0, 20]   |The index of the state step|
 |Odd/Even of step                     |OE       |[0, 1]    |Whether the step is even or odd value|
 |Angle of Cα                          |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα                       |d        |[-50, 50] |The distance of the Cα atom from the surface of the ellipse|
+|Distance of Cα                       |d        |[0, 50]   |The distance of the Cα atom from the surface of the ellipse|
 |Switch                               |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
-|Φ angle for lowest distance          |da-Φ     |[0, 7]    |The phi action that will result in the least distance to the ellipse surface|
-|Ψ angle for lowest distance          |da-Ψ     |[0, 7]    |The psi action that will result in the least distance to the ellipse surface|
+|Φ angle for lowest distance          |da-Φ     |[0, 360]  |The phi action that will result in the least distance to the ellipse surface|
+|Ψ angle for lowest distance          |da-Ψ     |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
 | Reward                        | Name | Values                             | Description           |
 |-------------------------------|------|------------------------------------|-----------------------|
 |Cα Distance                    |R     |(-2/71.7<sup>2</sup>)d<sup>2</sup>+1|Cα distance from ellipse surface|
-|Loop closure                   |Rc    |+100                                |If Sr3 condition is met for loop closure|
+|Loop closure                   |R     |+100                                |If Sr3 condition is met for loop closure|
 
 The **stop conditions** are as follows:
 | Condition                     | Name | Reward Value | Description           |
 |-------------------------------|------|--------------|-----------------------|
 |Polypeptide length of i=N      |St    |0             |Termination: when the polypeptide reachs a maximum length of N amino acids|
 |Self loop                      |Sr1   |0             |Truncation: if the peptide chain makes a circle around itself the environment will end|
-|Moving backwards               |Sr2   |0             |Truncation: if the Tt < Tt-1|
-
-
-|Loop closure                   |Sr3   |Rc            |Truncation: if the N-term to C-term distance < 1.5 Å (working on it)|
+|Moving backwards               |Sr2   |0             |Truncation: if the T<sub>t</sub> < T<sub>t-1</sub>|
+|Loop closure                   |Sr3   |+100          |Truncation: if the N-term to C-term distance between 0.0 and 3 Å|
 
 > __Note__
 > 
