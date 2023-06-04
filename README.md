@@ -62,10 +62,10 @@ The **features** are as follows:
 |Index of step                        |i        |[0, 20]   |The index of the state step|
 |Odd/Even of step                     |OE       |[0, 1]    |Whether the step is even or odd value|
 |Angle of Cα                          |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
-|Distance of Cα                       |d        |[0, 50]   |The distance of the Cα atom from the surface of the ellipse|
+|Distance of Cα                       |d        |[0, 100]  |The distance of the Cα atom from the surface of the ellipse|
 |Switch                               |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
-|Φ angle for lowest distance          |da-Φ     |[0, 360]  |The phi action that will result in the least distance to the ellipse surface|
-|Ψ angle for lowest distance          |da-Ψ     |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
+|Φ angle for lowest distance          |fda-Φ    |[0, 360]  |The phi action that will result in the least distance to the ellipse surface|
+|Ψ angle for lowest distance          |fda-Ψ    |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
@@ -85,8 +85,6 @@ The **stop conditions** are as follows:
 > __Note__
 > 
 > **i**: is the current index of the amino acid.
-> 
-> **n**: is the current final size of the built polypeptide.
 > 
 > **N**: is largest possible size of a polypeptide allowed by the environment (20 amino acids).
 
