@@ -7,7 +7,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 1. Install dependencies:
 	`pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose`
 
-2. To train an agent (training time 30 days):
+2. To train an agent (training time 3 days):
 	`python3 -B RL.py -rl`
 
 3. To play the environment using a trained agent:
@@ -18,7 +18,7 @@ The following is a SLURM and PBS job submission scripts to train the agent on a 
 #!/bin/sh
 #SBATCH --job-name=Mira
 #SBATCH --partition=compsci
-#SBATCH --time=720:00:00
+#SBATCH --time=72:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
@@ -30,7 +30,7 @@ python3 -u -B RL.py -rl
 #!/bin/bash
 #PBS -N Mira
 #PBS -q thin
-#PBS -l walltime=720:00:00
+#PBS -l walltime=72:00:00
 #PBS -l select=1:ncpus=24
 #PBS -j oe
 
@@ -101,7 +101,7 @@ def train():
 	env           = MiraMar()
 	n_envs        = 64
 	n_steps       = 1024
-	timesteps     = 10e6
+	timesteps     = 30e6
 	n_minibatches = 128
 	epochs        = 16
 	seed          = 1
@@ -258,7 +258,7 @@ def train():
 				KL      = round(approx_kl.item(), 3)
 				Clip    = round(clipfracs[-1], 3)
 				exp_var = round(explained_var, 3)
-				A = f'Update: {update:,}/{n_updates:<10,}'
+				A = f'Update: {update:,}/{n_updates:<15,}'
 				B = f'Steps: {global_step:<10,}'
 				C = f'Returns: {Gt_mean:,} +- {Gt_SD:<10,}'
 				D = f'Lengths: {Ln_mean:,} +- {Ln_SD:<10,}'
@@ -276,7 +276,7 @@ def train():
 			if (update % 50 == 0): 
 				# Export agent model
 				torch.save(agent, f'agent_{update}.pth')
-		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<10,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
+		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<15,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
 	# Export agent model
 	torch.save(agent, 'agent.pth')
 
