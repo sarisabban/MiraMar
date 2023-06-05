@@ -8,12 +8,12 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 	`pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose`
 
 2. To train an agent (training time 3 days):
-	`python3 -B RL.py -rl`
+	`python3 -B RL.py -t`
 
 3. To play the environment using a trained agent:
-	`python3 -B RL.py -rlp agent.pth`
+	`python3 -B RL.py -p agent.pth`
 
-The following is a SLURM and PBS job submission scripts to train the agent on a high performance supercomputer:
+The following are SLURM and PBS job submission scripts to train the RL agent on a high performance supercomputer:
 ----------------------------
 #!/bin/sh
 #SBATCH --job-name=Mira
@@ -54,8 +54,8 @@ from MiraMar import MiraMar
 warnings.filterwarnings('ignore')
 
 parser = argparse.ArgumentParser(description='Reinforcement learning training on the MiraMar environment')
-parser.add_argument('-rl', '--rl_train', action='store_true', help='Train a reinforcement learning agent')
-parser.add_argument('-rlp', '--rl_play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
+parser.add_argument('-t', '--train', action='store_true', help='Train a reinforcement learning agent')
+parser.add_argument('-p', '--play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
 args = parser.parse_args()
 
 def make_env(env_id):
@@ -106,7 +106,7 @@ def train():
 	epochs        = 16
 	seed          = 1
 	lr            = 2.5e-4
-	gamma         = 0.99
+	gamma         = 0.95
 	lambd         = 0.95
 	clip_coef     = 0.1
 	vf_coef       = 0.5
@@ -121,7 +121,7 @@ def train():
 	torch.backends.cudnn.deterministic = True
 	device = 'cuda' if torch.cuda.is_available() else 'cpu'
 	date = datetime.datetime.now().strftime('%d-%b-%Y @ %H:%M:%S')
-	print('Training on:', device, '||', 'Started on:', date, '\n' + '='*40)
+	print('Training on:', device, '||', 'Started on:', date, '\n' + '='*54)
 	# Environment setup
 	envs = gym.vector.AsyncVectorEnv([make_env(env) for i in range(n_envs)])
 	agent = Agent(envs).to(device)
@@ -146,7 +146,6 @@ def train():
 	for update in range(1, n_updates + 1):
 		# Anneal the learning rate
 		time_start = time.time()
-		optimizer.param_groups[0]['lr'] = (1.0 - (update - 1.0) / n_updates) * lr
 		# Steps to generate a dataset
 		Gts, Lns = [], []
 		for step in range(n_steps):
@@ -258,10 +257,10 @@ def train():
 				KL      = round(approx_kl.item(), 3)
 				Clip    = round(clipfracs[-1], 3)
 				exp_var = round(explained_var, 3)
-				A = f'Update: {update:,}/{n_updates:<15,}'
-				B = f'Steps: {global_step:<10,}'
-				C = f'Returns: {Gt_mean:,} +- {Gt_SD:<10,}'
-				D = f'Lengths: {Ln_mean:,} +- {Ln_SD:<10,}'
+				A = f'Update: {update:>5,} / {n_updates:<10,}'
+				B = f'Steps: {global_step:<15,}'
+				C = f'Returns: {Gt_mean:<6,} +- {Gt_SD:<10,}'
+				D = f'Lengths: {Ln_mean:<6,} +- {Ln_SD:<10,}'
 				E = f'A_loss: {A_loss:<10,}'
 				F = f'C_loss: {C_loss:<10,}'
 				G = f'Entropy loss: {Entropy:<10,}'
@@ -270,13 +269,13 @@ def train():
 				J = f'Clip: {Clip:<10,}'
 				K = f'Explained Variance: {exp_var:<10,}'
 				L = f'Seconds per update: {time_seconds:<10,}'
-				M = f'Remaining time: {time_update}\n'
-				f.write(A + B + C + D + E + F + G + H + I + J + K + L + M)
-			# Export agent model every 100 updates
+				M = f'Remaining time: {time_update}'
+				f.write(A + B + C + D + E + F + G + H + I + J + K + L + M + '\n')
+			# Export agent model every 50 updates
 			if (update % 50 == 0): 
 				# Export agent model
 				torch.save(agent, f'agent_{update}.pth')
-		print(f'Updates: {update}/{n_updates} | Steps: {global_step:<15,} Return: {Gt_mean:,} +- {Gt_SD:<15,} Remaining time: {time_update}')
+		print(f'{B}{C}')
 	# Export agent model
 	torch.save(agent, 'agent.pth')
 
@@ -300,7 +299,7 @@ def play(filename='agent.pth'):
 	env.render()
 
 def main():
-	if args.rl_train:  train()
-	elif args.rl_play: play(filename=sys.argv[2])
+	if args.train:  train()
+	elif args.play: play(filename=sys.argv[2])
 
 if __name__ == '__main__': main()
