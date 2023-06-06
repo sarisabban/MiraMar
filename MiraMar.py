@@ -319,7 +319,7 @@ class MiraMar():
 			self.future_output = output
 			solution = scipy.optimize.minimize(
 				self.future,
-				(56, 220),
+				(59, 221),
 				bounds=((0.00, 359.99), (0.00, 359.99)),
 				method='SLSQP')
 			results.append(solution.x[0])
@@ -467,9 +467,10 @@ class MiraMar():
 		# Sr2 - End game if Tt < Tt-1
 		if self.T < T: Sr = True
 		# Sr3: loop closure
-		if T < 45 and self.i > 5 and self.switch == 1 and 0.5 < C_term < 3:
+		if T < 90 and self.i > 5 and self.switch == 1 and 1.27 < C_term < 5:
 			Sr = True
-			R = +100
+			F = -(100/3.68)*C_term + (500/3.68) # potential function
+			R = -100*self.i + 2100 + F
 		if self.i != 0: self.T = T
 		###########################
 		####### Information #######
