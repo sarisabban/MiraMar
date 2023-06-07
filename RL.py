@@ -106,7 +106,7 @@ def train():
 	epochs        = 16
 	seed          = 1
 	lr            = 2.5e-4
-	gamma         = 0.99
+	gamma         = 0.95
 	lambd         = 0.95
 	clip_coef     = 0.1
 	vf_coef       = 0.5
