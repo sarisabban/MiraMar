@@ -319,7 +319,7 @@ class MiraMar():
 			self.future_output = output
 			solution = scipy.optimize.minimize(
 				self.future,
-				(59, 221),
+				(72, 221),
 				bounds=((0.00, 359.99), (0.00, 359.99)),
 				method='SLSQP')
 			results.append(solution.x[0])
