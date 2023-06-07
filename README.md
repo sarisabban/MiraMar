@@ -72,7 +72,7 @@ The **rewards** are as follows:
 | Reward                        | Name | Values                    | Description           |
 |-------------------------------|------|---------------------------|-----------------------|
 |Cα Distance                    |R1    |${-2 \over 71.7^2} d^2 + 1$|Cα distance d from ellipse surface (intermediate reward shape)|
-|Loop closure                   |Rc    |+100                       |If Sr3 condition is met for loop closure (actual episodic reward)|
+|Loop closure                   |Rc    |$-100 i + 2100 + F$        |If Sr3 condition is met for loop closure (actual episodic reward) with the F potential function as $F = {-100 \over 3.68} C_term + {500 \over 3.68}$|
 
 The reward is +100 when the loop closes and the episode terminates, with R1 intermediate rewards shaped to assist the agent into finding the terminal (loop closing) state.
 
