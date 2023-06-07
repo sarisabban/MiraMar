@@ -106,7 +106,7 @@ def train():
 	epochs        = 16
 	seed          = 1
 	lr            = 2.5e-4
-	gamma         = 0.95
+	gamma         = 0.99
 	lambd         = 0.95
 	clip_coef     = 0.1
 	vf_coef       = 0.5
@@ -243,7 +243,7 @@ def train():
 		time_seconds = time.time() - time_start
 		time_update_seconds = round(time_seconds * (n_updates - update), 0)
 		time_update = datetime.timedelta(seconds=time_update_seconds)
-		time_seconds = round(time_seconds, 3)
+		time_minutes = round(time_seconds/60, 3)
 		if log:
 			with open('train.log', 'a') as f:
 				Gt_mean = round(np.array(Gts).mean(), 3)
@@ -268,7 +268,7 @@ def train():
 				I = f'KL: {KL:<10,}'
 				J = f'Clip: {Clip:<10,}'
 				K = f'Explained Variance: {exp_var:<10,}'
-				L = f'Seconds per update: {time_seconds:<10,}'
+				L = f'Minutes per update: {time_minutes:<10,}'
 				M = f'Remaining time: {time_update}'
 				f.write(A + B + C + D + E + F + G + H + I + J + K + L + M + '\n')
 			# Export agent model every 50 updates
