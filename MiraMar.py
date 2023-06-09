@@ -428,7 +428,7 @@ class MiraMar():
 		###########################
 		R = 0.0
 		if self.i != 0:
-			R = -(2 / 71.7**2) * d**2 + 1
+			R = -(1/9) * d**2 + 1
 #		# Rr - Target rewards
 #		if   hit == 0: R += 0                          # Too far
 #		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
