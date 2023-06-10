@@ -243,7 +243,7 @@ def train():
 		time_seconds = time.time() - time_start
 		time_update_seconds = round(time_seconds * (n_updates - update), 0)
 		time_update = datetime.timedelta(seconds=time_update_seconds)
-		time_minutes = round(time_seconds/60, 3)
+		time_minutes = round(time_seconds/60, 1)
 		if log:
 			with open('train.log', 'a') as f:
 				Gt_mean = round(np.array(Gts).mean(), 3)
@@ -259,16 +259,16 @@ def train():
 				exp_var = round(explained_var, 3)
 				A = f'Update: {update:>5,} / {n_updates:<10,}'
 				B = f'Steps: {global_step:<15,}'
-				C = f'Returns: {Gt_mean:<6,} +- {Gt_SD:<10,}'
+				C = f'Returns: {Gt_mean:<9,} +- {Gt_SD:<10,}'
 				D = f'Lengths: {Ln_mean:<6,} +- {Ln_SD:<10,}'
 				E = f'A_loss: {A_loss:<10,}'
-				F = f'C_loss: {C_loss:<10,}'
+				F = f'C_loss: {C_loss:<15,}'
 				G = f'Entropy loss: {Entropy:<10,}'
-				H = f'Final loss: {Loss:<10,}'
+				H = f'Final loss: {Loss:<15,}'
 				I = f'KL: {KL:<10,}'
 				J = f'Clip: {Clip:<10,}'
 				K = f'Explained Variance: {exp_var:<10,}'
-				L = f'Minutes per update: {time_minutes:<10,}'
+				L = f'Minutes per update: {time_minutes:<6,}'
 				M = f'Remaining time: {time_update}'
 				f.write(A + B + C + D + E + F + G + H + I + J + K + L + M + '\n')
 			# Export agent model every 50 updates
