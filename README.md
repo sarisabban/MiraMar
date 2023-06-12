@@ -82,7 +82,7 @@ The **stop conditions** are as follows:
 |Polypeptide length i=N         |St    |R1            |Termination: when the polypeptide reachs a maximum length of N amino acids|
 |Self loop                      |Sr1   |R1            |Truncation: if the peptide chain makes a circle around itself the environment will end|
 |Moving backwards               |Sr2   |R1            |Truncation: if the T<sub>t</sub> < T<sub>t-1</sub>|
-|Loop closure                   |Sr3   |Rc            |Truncation: if the N-term to C-term distance between 0.0 and 3 Å|
+|Loop closure                   |Sr3   |Rc            |Truncation: if T<sub>t</sub> < 90 and the N-term to C-term distance is between 1.27 Å and 5 Å|
 
 These termination and turnication conditions ensure that low rewards occure when sub-optimal molecules are built.
 
