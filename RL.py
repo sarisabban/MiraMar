@@ -7,7 +7,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 1. Install dependencies:
 	`pip install torch gymnasium scipy git+https://github.com/sarisabban/Pose`
 
-2. To train an agent (training time 3 days):
+2. To train an agent (training time 7 days):
 	`python3 -B RL.py -t`
 
 3. To play the environment using a trained agent:
@@ -18,7 +18,7 @@ The following are SLURM and PBS job submission scripts to train the RL agent on 
 #!/bin/sh
 #SBATCH --job-name=Mira
 #SBATCH --partition=compsci
-#SBATCH --time=72:00:00
+#SBATCH --time=168:00:00
 #SBATCH --mem=0
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=48
@@ -30,7 +30,7 @@ python3 -u -B RL.py -rl
 #!/bin/bash
 #PBS -N Mira
 #PBS -q thin
-#PBS -l walltime=72:00:00
+#PBS -l walltime=168:00:00
 #PBS -l select=1:ncpus=24
 #PBS -j oe
 
