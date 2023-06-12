@@ -20,9 +20,9 @@ class MiraMar():
 		''' Initialise global variables '''
 		self.bins = 360
 		self.observation_space = gym.spaces.Box(
-			low=np.array( [0,  0,  0,  0,  0,  0,  0,  0,  0]),
-			high=np.array([1, 20,  1,360,100,  1,360,360,100]))
-		self.action_space = gym.spaces.MultiDiscrete([self.bins, self.bins])
+			low=np.array( [0,  0, 0,  0,  0, 0,  0,  0,  0,  0,  0,  3, 0,  0]),
+			high=np.array([1, 20, 1,360,100, 1,360,360,100,360,360, 10, 1, 50]))
+		self.action_space = gym.spaces.MultiDiscrete([52, self.bins, self.bins])
 		self.reward_range = (-np.inf, np.inf)
 		self.render_mode  = render_mode
 		self.seed = None
@@ -398,9 +398,9 @@ class MiraMar():
 		return(S, info)
 	def step(self, actions):
 		''' Play one step, add an amino acid and define its phi/psi angles '''
-		AA  = 'G'#self.get_residue_meanings(actions[0])
-		phi = self.get_angle_meanings(actions[0])
-		psi = self.get_angle_meanings(actions[1])
+		AA  = self.get_residue_meanings(actions[0])
+		phi = self.get_angle_meanings(actions[1])
+		psi = self.get_angle_meanings(actions[2])
 		self.addAA(AA, phi, psi)
 		self.i = max(self.pose.data['Amino Acids'].keys())
 		start, F1, F2, e = self.path()
@@ -421,19 +421,20 @@ class MiraMar():
 		T, P, _, d, radius = self.project(CA)
 		fT, fP, _, fd, radius = self.project(fCA)
 		# Target logic
-#		hit, Trgs, direction, CA_t = self.target_logic(AA)
-#		SC_size = len(self.pose.AminoAcids[AA]['Vectors'])
+		hit, Trgs, direction, CA_t = self.target_logic(AA)
+		SC_size = len(self.pose.AminoAcids[AA]['Vectors'])
 		###########################
 		##### Reward Function #####
 		###########################
 		R = 0.0
+		# Path reward
 		if self.i != 0:
 			R = -(1/9) * d**2 + 1
-#		# Rr - Target rewards
-#		if   hit == 0: R += 0                          # Too far
-#		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
-#		elif hit == 2: R -= 1                          # No rotamers (wrong AA)
-#		elif hit == 3: R -= 10                         # Miss
+		# Target reward
+		if   hit == 0: R += 0                          # Too far
+		elif hit == 1: R += (-9/29)*SC_size + (299/29) # Hit
+		elif hit == 2: R += 0                          # No rotamers (wrong AA)
+		elif hit == 3: R -= 10                         # Miss
 		###########################
 		######## Features #########
 		###########################
@@ -450,11 +451,11 @@ class MiraMar():
 		# Final features
 		S = np.array([
 			e, self.i, OE, T, d, self.switch,
-			fd_aP, fd_aS,
-			C_term])
-		###########################
-		### End State Condition ###
-		###########################
+			fd_aP, fd_aS, C_term,
+			Tr_aP, Tr_aS, Trgs, direction, CA_t])
+		############################
+		### End State Conditions ###
+		############################
 		St, Sr = False, False
 		# St - If polypeptide reaches max amino acids
 		if self.i >= MAX: St = True
@@ -501,6 +502,9 @@ class MiraMar():
 				'rewards':self.step_rewards,
 				'terminations':self.terms,
 				'truncations':self.trncs}
+		#########################
+		####### Rendering #######
+		#########################
 		if self.render_mode == 'human':
 			self.render(show=False, save=True)
 			display = ['pymol', 'molecule.pdb', 'path.pdb']
