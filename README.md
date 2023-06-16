@@ -68,8 +68,6 @@ The **features** are as follows:
 |Ψ angle for lowest distance          |fda-Ψ    |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
-$$R_T = \begin{cases}-{1 \over 33} SC + 1 &\text{if hit} \\\ -{1 \over 33} SC &\text{else}\end{cases}$$
-
 The **rewards** are as follows:
 | Reward                        | Name        | Values                     | Description           |
 |-------------------------------|-------------|----------------------------|-----------------------|
