@@ -68,10 +68,12 @@ The **features** are as follows:
 |Ψ angle for lowest distance          |fda-Ψ    |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
+$$R_T = \begin{cases}-{1 \over 33} SC + 1 &\text{if hit} \\\ -{1 \over 33} SC &\text{else}\end{cases}$$
+
 The **rewards** are as follows:
 | Reward                        | Name        | Values                     | Description           |
 |-------------------------------|-------------|----------------------------|-----------------------|
-|Cα Distance                    |R            |$-{1 \over 9} d^2 + 1 + R_T$|Cα distance d from ellipse surface (intermediate reward shape) with $R_T = -{1 \over 33} SC + 1 -{1 \over 33} SC$ where SC is the number of atoms in a side chain|
+|Cα Distance                    |R            |$-{1 \over 9} d^2 + 1 + R_T$|Cα distance d from ellipse surface (intermediate reward shape) with $R_T = -{1 \over 33} SC + 1$ if hit or $R_T = -{1 \over 33} SC$ otherwise, and where SC is the number of atoms in a side chain|
 |Loop closure                   |R<sub>c</sub>|$-100 i + 2100 + F$         |If Sr3 condition is met for loop closure (actual episodic reward) with the F potential function as $F = {-100 \over 3.68} C + {500 \over 3.68}$ where C is the C-term|
 
 The reward is +100 when the loop closes and the episode terminates, with R1 intermediate rewards shaped to assist the agent into finding the terminal (loop closing) state.
