@@ -64,8 +64,12 @@ The **features** are as follows:
 |Angle of Cα                          |T        |[0, 360]  |The angle of the latest Cα atom from the start position through the centre of the ellipse|
 |Distance of Cα                       |d        |[0, 100]  |The distance of the Cα atom from the surface of the ellipse|
 |Switch                               |Switch   |[0, 1]    |The point where the chain switchs from moving away from the start position the returning|
-|Φ angle for lowest distance          |fda-Φ    |[0, 360]  |The phi action that will result in the least distance to the ellipse surface|
-|Ψ angle for lowest distance          |fda-Ψ    |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
+|Φ angle for lowest distance to path  |fda-Φ    |[0, 360]  |The phi action that will result in the least distance to the ellipse surface|
+|Ψ angle for lowest distance to path  |fda-Ψ    |[0, 360]  |The psi action that will result in the least distance to the ellipse surface|
+|Φ angle for lowest distance to target|Tr_aP    |[0, 360]  |The phi action that will result in the least distance to the target|
+|Ψ angle for lowest distance to target|Tr_aS    |[0, 360]  |The psi action that will result in the least distance to the target|
+|Number of remaining target           |Trgs     |[3, 10]   |The number of remaining targets that goes down as targets are hit or missed|
+|Direction of target                  |direction|[0, 1]    |The direction of the target wheather in the direction of the sidechain or away from it|
 |Distance to C-term                   |C-term   |[0, 100]  |The distance from N-term to C-term (for loop closure)|
 
 The **rewards** are as follows:
