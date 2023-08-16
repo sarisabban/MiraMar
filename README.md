@@ -75,7 +75,7 @@ The **features** are as follows:
 The **rewards** are as follows:
 | Reward                        | Name        | Values                     | Description           |
 |-------------------------------|-------------|----------------------------|-----------------------|
-|Cα Distance                    |R            |$-{1 \over 9} d^2 + 1 + R_T$|Cα distance d from ellipse surface (intermediate reward shape) with $R_T = -{1 \over 33} SC + 1$ if hit or $R_T = -{1 \over 33} SC$ otherwise, and where SC is the number of atoms in a side chain|
+|Cα Distance                    |R            |$-{1 \over 9} d^2 + 1 + R_T$|Cα distance d from ellipse surface (intermediate reward shape) with $R_T = -{1 \over 33} SC + 1$ if hit, or 0 if far or no χ angle but used GLY amino acid, or -1 if far or no χ angle and used any amino acid other than GLY, or -1 for a miss, and where SC is the number of atoms in a side chain|
 |Loop closure                   |R<sub>c</sub>|$-100 i + 2100 + F$         |If Sr3 condition is met for loop closure (actual episodic reward) with the F potential function as $F = {-100 \over 3.68} C + {500 \over 3.68}$ where C is the C-term|
 
 The reward is +100 when the loop closes and the episode terminates, with R1 intermediate rewards shaped to assist the agent into finding the terminal (loop closing) state.
@@ -136,10 +136,3 @@ info =
 
 ## Training:
 Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup.
-
-
-
-
-
-
-#MAKE SURE ALL EQUATIONS ARE CORRECT
