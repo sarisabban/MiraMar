@@ -1,7 +1,7 @@
 # MiraMar
 *De novo* cyclic protein polypeptide design using reinforcement learning.
 
-<p align="center"><img src="image.png" width="80%" height="80%" /></p>
+<p align="center"><img src="logo.png" width="80%" height="80%" /></p>
 
 ## Description:
 This is an environment designed to be compatible with OpenAI's gymnasium (not gym) library and optimised for Python 3.10+ that builds a cyclic protein polypeptide molecule. The goal is to build a cyclic polypeptide molecule, one amino acid at a time, going around an elliptical path, while hitting specific targets.
@@ -138,3 +138,4 @@ info =
 Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup.
 
 ## Results:
+<p align="center"><img src="plots.png" width="80%" height="80%" /></p>
