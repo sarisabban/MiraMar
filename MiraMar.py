@@ -430,8 +430,10 @@ class MiraMar():
 		# Path reward
 		if self.i != 0: R = -(1/9) * d**2 + 1
 		# Target reward
-		if    hit == 1: R += (-1/33)*SC_size + 1 # Hit
-		else:           R += (-1/33)*SC_size     # Else
+		if   hit == 1: R += (-1/33)*SC_size + 1           # Hit
+		elif AA == 'G' and (hit == 0 or hit == 2): R += 0 # Far or no rotamers + G
+		elif hit == 0 or hit == 2: R -= 1                 # Far or no rotamers
+		elif hit == 3: R -= 1                             # Miss
 		###########################
 		######## Features #########
 		###########################
