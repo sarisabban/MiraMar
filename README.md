@@ -138,4 +138,5 @@ info =
 Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup.
 
 ## Results:
-<p align="center"><img src="plots.png" width="80%" height="80%" /></p>
+<p align="center">
+	<img src="plots.png" width="40%" height="40%"> <img src="output.png" width="40%" height="40%" /></p>
