@@ -373,7 +373,7 @@ class MiraMar():
 					self.targetLST.pop(0)
 					self.mark = False
 		return(hit, Trgs, direction, CA_t)
-	def reset(self, seed=None):
+	def reset(self, seed=None, custom=[]):
 		''' Reset game '''
 		self.time_start = time.time()
 		self.pose = None
@@ -390,6 +390,15 @@ class MiraMar():
 		self.o = np.random.uniform(0, 90)
 		self.j = np.random.uniform(0, 90)
 		self.w = np.random.uniform(0, 90)
+		if custom != []:
+			self.seed = 0
+			np.random.seed(self.seed)
+			self.C = custom[0]
+			self.a = custom[1]
+			self.b = custom[2]
+			self.o = custom[3]
+			self.j = custom[4]
+			self.w = custom[5]
 		self.start, F1, F2, e = self.path()
 		self.addAA()
 		self.targetS()
