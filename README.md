@@ -47,15 +47,7 @@ A step adds an amino acid and rotates its Φ and Ψ torsion angles as such `env.
 
 You can use `env.render(show=False, save=True)` to save rather than show the environment output, you must have PyMOL installed to display the output. If no output is displayed, i.e PyMOL does not automatically open then go to the python venv's directory (python's virtual environment), open the *pyvenv.cfg* and change the line *include-system-site-packages = false* to *true* (all small letters).
 
-
-To generate a custom path use the following command: `observation, info = env.reset(custom=[[Cx, Cy, Cz], a, b, o, j, w])` for example `observation, info = env.reset(custom=[[27, 35, 30], 6, 7, 45, 45, 45])` where
-
-**[Cx, Cy, Cz]** are the coordinates of the centeral point of the ellipse, 
-**a** is the semi-major axis of the ellipse, 
-**b** is the semi-minor axis of the ellipse, 
-**o**, **j**, and **w** are the angle orientations of the ellipse with values 0° to 90°.
-This command will automatically freeze the random seed to the value of 0.
-
+To generate a **custom path** use the following command: `observation, info = env.reset(custom=[[Cx, Cy, Cz], a, b, o, j, w])` for example `observation, info = env.reset(custom=[[27, 35, 30], 6, 7, 45, 45, 45])` where *[Cx, Cy, Cz]* are the coordinates of the centeral point of the ellipse, *a* is the semi-major axis of the ellipse, *b* is the semi-minor axis of the ellipse, and *o*, *j*, *w* are the angle orientations of the ellipse with values 0° to 90°. This command will automatically freeze the random seed to the value of 0.
 
 ## Environment details:
 The **actions** are as follows:
