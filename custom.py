@@ -31,7 +31,7 @@ def point(selection):
 	coords_ave = coords_matrix.mean(axis=0)
 	coords_ave = coords_ave.tolist()
 	coords_ave = [round(x, 1) for x in coords_ave]
-	print('Coordinates of center of the path:', coords_ave)
+	print('Coordinates of the point:', coords_ave)
 	cmd.extend('Center', center)
 	return(coords_ave)
 
