@@ -17,7 +17,7 @@ def RotationMatrix(thetaX, thetaY, thetaZ):
 	R  = Rz.dot(Ry).dot(Rx)
 	return(R)
 
-def center(selection):
+def point(selection):
 	'''
 	Prints the coordinate of a give selection, to be used to find the center
 	of the path
