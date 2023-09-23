@@ -137,12 +137,13 @@ info =
 ```
 
 ## Custom Path and Targets (GUI with PyMOL):
-If you want to generate a path and targets to a specific molecular structure you can use the following steps:
-
-
-
-
-
+To generate a path and targets to a specific molecular structure you can use the following steps:
+1. Use the following command to open the PDB molecule in PyMOL and import the required functions: `pymol custom.py -b FILENAME.pdb`.
+2. Select a residue where the center of the elliptical should be.
+3. Run the following command `point('sele')` to get a starting Cx, Cy, Cz coordinate values of the center point of the elliptical path.
+4. Run `path(Cx, Cy, Cz, a, b, o, j, w)` to generate the elliptical path.
+5. Adjust the *Cx, Cy, Cz, a, b, o, j, w* values and run the last command again until the ideal path is generated.
+6. Select residues to target and use the `point('sele')` command to get each target's coordinates.
 
 ## Training:
 Provided is the `RL.py` script that trains a PPO agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup. The following are the training results of that produced the *agent.pth* trained agent:
