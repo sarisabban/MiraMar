@@ -57,7 +57,7 @@ class MiraMar():
 					F.write(Entry)
 			with open('path.pdb', 'a') as F:
 				F.write('HEADER Targets\n')
-				for i, point in enumerate(self.targetLST):
+				for i, point in enumerate(self.Ts):
 					p = point[1]
 					a, e, c = 'O', 'O', 'C'
 					A, l, r, s, I = 'ATOM', '', 'GLY', 1, ''
@@ -410,6 +410,7 @@ class MiraMar():
 			self.targetLST = points
 		else:
 			self.targetS()
+		self.Ts = copy.deepcopy(self.targetLST)
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, Sr, info = self.SnR(self.start, F1, F2, e, 'M')
 		return(S, info)
