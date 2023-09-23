@@ -136,13 +136,8 @@ info =
 	}
 ```
 
-
-
-
-
-
-## Custom Path and Targets:
-If you have a specific molecular structure that you want to generate a p ......
+## Custom Path and Targets (GUI with PyMOL):
+If you want to generate a path and targets to a specific molecular structure you can use the following steps:
 
 
 
