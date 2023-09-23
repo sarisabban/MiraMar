@@ -393,7 +393,7 @@ class MiraMar():
 		if custom != []:
 			self.seed = 0
 			np.random.seed(self.seed)
-			self.C = custom[0]
+			self.C = np.array(custom[0])
 			self.a = custom[1]
 			self.b = custom[2]
 			self.o = custom[3]
@@ -401,7 +401,15 @@ class MiraMar():
 			self.w = custom[5]
 		self.start, F1, F2, e = self.path()
 		self.addAA()
-		self.targetS()
+		if custom != []:
+			points = []
+			for p, point in enumerate(custom[6]):
+				T, P, vP, vP_mag, r = self.project(point)
+				points.append((T, point))
+			points.sort(key=lambda x: x[0], reverse=True)
+			self.targetLST = points
+		else:
+			self.targetS()
 		self.T, self.F1P, self.switch, self.mark = 360, 0, 0, False
 		S, R, St, Sr, info = self.SnR(self.start, F1, F2, e, 'M')
 		return(S, info)
