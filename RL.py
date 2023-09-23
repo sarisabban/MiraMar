@@ -13,6 +13,12 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 3. To play the environment using a trained agent:
 	`python3 -B RL.py -p agent.pth`
 
+4. To generate a molecule for a custom path and targets:
+	`python3 -B RL_6.py -g agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
+	example:
+	`python3 -B RL_6.py -g agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
+	Repeat the command until you get a satisfactory result, because it generates a different molecule everytime
+
 The following are SLURM and PBS job submission scripts to train the RL agent on a high performance supercomputer:
 ----------------------------
 #!/bin/sh
@@ -56,6 +62,7 @@ warnings.filterwarnings('ignore')
 parser = argparse.ArgumentParser(description='Reinforcement learning training on the MiraMar environment')
 parser.add_argument('-t', '--train', action='store_true', help='Train a reinforcement learning agent')
 parser.add_argument('-p', '--play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
+parser.add_argument('-g', '--generate', nargs='+', help='Have a trained agent generate a molecule for a custom path ')
 args = parser.parse_args()
 
 def make_env(env_id):
@@ -279,14 +286,21 @@ def train():
 	# Export agent model
 	torch.save(agent, 'agent.pth')
 
-def play(filename='agent.pth'):
+def play(filename='agent.pth', custom=[]):
 	''' Play the MiraMar environment using a trained PPO agent '''
 	# Import agent model
 	agent = torch.load(filename)
 	agent.eval()
 	# Play game
 	env = MiraMar()
-	S, I = env.reset()
+	if custom != []:
+		C       = custom[0]
+		a, b    = custom[1], custom[2]
+		o, j, w = custom[3], custom[4], custom[5]
+		targets = custom[6]
+		S, I = env.reset(custom=[C, a, b, o, j, w, targets])
+	else:
+		S, I = env.reset()
 	done = False
 	while not done:
 		S = torch.Tensor([S]).to('cpu')
@@ -299,7 +313,19 @@ def play(filename='agent.pth'):
 	env.render()
 
 def main():
-	if args.train:  train()
-	elif args.play: play(filename=sys.argv[2])
+	if args.train:      train()
+	elif args.play:     play(filename=sys.argv[2])
+	elif args.generate:
+		Cx = float(sys.argv[3])
+		Cy = float(sys.argv[4])
+		Cz = float(sys.argv[5])
+		a  = float(sys.argv[6])
+		b  = float(sys.argv[7])
+		o  = float(sys.argv[8])
+		j  = float(sys.argv[9])
+		w  = float(sys.argv[10])
+		T = [float(x) for x in sys.argv[11:]]
+		T = [T[i:i+3] for i in range(0, len(T), 3)]
+		play(filename=sys.argv[2], custom=[[Cx, Cy, Cz], a, b, o, j, w, T])
 
 if __name__ == '__main__': main()
