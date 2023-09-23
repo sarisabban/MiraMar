@@ -19,10 +19,9 @@ def RotationMatrix(thetaX, thetaY, thetaZ):
 
 def point(selection):
 	'''
-	Prints the coordinate of a give selection, to be used to find the center
-	of the path
+	Prints the coordinate of a give selection
 		1. Select a residue in PyMOL
-		2. Use the following command in the PyMOL terminal: center('sele')
+		2. Use the following command in the PyMOL terminal: point('sele')
 	'''
 	selection = selection + ' and n. CA'
 	model = querying.get_model(selection)
@@ -32,7 +31,7 @@ def point(selection):
 	coords_ave = coords_ave.tolist()
 	coords_ave = [round(x, 1) for x in coords_ave]
 	print('Coordinates of the point:', coords_ave)
-	cmd.extend('Center', center)
+	cmd.extend('Point', point)
 	return(coords_ave)
 
 def path(Cx, Cy, Cz, a, b, o, j, w):
