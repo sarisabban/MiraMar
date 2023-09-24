@@ -31,7 +31,7 @@ The following are SLURM and PBS job submission scripts to train the RL agent on 
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -u -B RL.py -rl
+python3 -u -B RL.py -t
 ----------------------------
 #!/bin/bash
 #PBS -N Mira
@@ -43,7 +43,7 @@ python3 -u -B RL.py -rl
 cd $PBS_O_WORKDIR
 
 conda activate RL
-python3 -u -B RL.py -rl
+python3 -u -B RL.py -t
 ----------------------------
 '''
 
