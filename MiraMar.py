@@ -42,6 +42,7 @@ class MiraMar():
 		return(residues[action])
 	def render(self, show=True, save=False, path=True, filename='molecule'):
 		''' Export the molecule as a PDB file and display it '''
+		self.ends()
 		points = self.path(path=True)
 		if path:
 			with open('path.pdb', 'w') as F:
@@ -373,6 +374,37 @@ class MiraMar():
 					self.targetLST.pop(0)
 					self.mark = False
 		return(hit, Trgs, direction, CA_t)
+	def ends(self):
+		''' Adjust the ends of the final cyclic peptide '''
+		self.pose.data['Coordinates'] = \
+		np.delete(self.pose.data['Coordinates'], [1, 2, -2], axis=0)
+		length = len(self.pose.data['Atoms'])
+		del self.pose.data['Atoms'][2]
+		del self.pose.data['Atoms'][3]
+		del self.pose.data['Atoms'][length - 2]
+		for key in list(self.pose.data['Atoms'].keys())[2:]:
+			self.pose.data['Atoms'][-key + 2] = self.pose.data['Atoms'].pop(key)
+		for key in list(self.pose.data['Atoms'].keys())[2:]:
+			self.pose.data['Atoms'][-key] = self.pose.data['Atoms'].pop(key)
+		for key in list(self.pose.data['Atoms'].keys())[-1:]:
+			self.pose.data['Atoms'][key - 1] = self.pose.data['Atoms'].pop(key)
+		del self.pose.data['Bonds'][2]
+		del self.pose.data['Bonds'][3]
+		del self.pose.data['Bonds'][length - 2]
+		for key in list(self.pose.data['Bonds'].keys())[2:]:
+			self.pose.data['Bonds'][-key + 2] = self.pose.data['Bonds'].pop(key)
+		for key in list(self.pose.data['Bonds'].keys())[2:]:
+			self.pose.data['Bonds'][-key] = self.pose.data['Bonds'].pop(key)
+		for key in list(self.pose.data['Bonds'].keys())[-1:]:
+			self.pose.data['Bonds'][key - 1] = self.pose.data['Bonds'].pop(key)
+		for k, v in zip(self.pose.data['Bonds'].keys(),
+						self.pose.data['Bonds'].values()):
+			self.pose.data['Bonds'][k] = [x-2 for x in v]
+		self.pose.data['Bonds'][0] = [1, 2]
+		self.pose.data['Bonds'][1] = [0]
+		self.pose.data['Bonds'][2][0] = 0
+		self.pose.data['Bonds'][length - 5] = \
+		self.pose.data['Bonds'][length - 5][:-1]
 	def reset(self, seed=None, custom=[]):
 		''' Reset game '''
 		self.time_start = time.time()
@@ -449,7 +481,7 @@ class MiraMar():
 		if self.i != 0: R = -(1/9) * d**2 + 1
 		# Target reward
 		if   hit == 1: R += (-1/33)*SC_size + 1           # Hit
-		elif AA == 'G' and (hit == 0 or hit == 2): R += 0 # Far or no rotamers + G
+		elif AA == 'G' and (hit == 0 or hit == 2): R += 0 # Far or no rotamers+G
 		elif hit == 0 or hit == 2: R -= 1                 # Far or no rotamers
 		elif hit == 3: R -= 1                             # Miss
 		###########################
