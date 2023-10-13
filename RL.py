@@ -19,6 +19,14 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 	`python3 -B RL_6.py -g agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
 	Repeat the command until you get a satisfactory result, because it generates a different molecule everytime
 
+5. To generate multiple molecules but output only the best molecules for a custom path
+	`python3 -B RL_6.py -b agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
+	example:
+	`python3 -B RL_6.py -b agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
+	The agent will perform 300 attempts
+
+ for a custom path and targets:
+
 The following are SLURM and PBS job submission scripts to train the RL agent on a high performance supercomputer:
 ----------------------------
 #!/bin/sh
@@ -31,7 +39,7 @@ The following are SLURM and PBS job submission scripts to train the RL agent on 
 
 cd $SLURM_SUBMIT_DIR
 
-python3 -u -B RL.py -t
+python3 -u -B RL.py -rl
 ----------------------------
 #!/bin/bash
 #PBS -N Mira
@@ -43,7 +51,7 @@ python3 -u -B RL.py -t
 cd $PBS_O_WORKDIR
 
 conda activate RL
-python3 -u -B RL.py -t
+python3 -u -B RL.py -rl
 ----------------------------
 '''
 
@@ -62,7 +70,8 @@ warnings.filterwarnings('ignore')
 parser = argparse.ArgumentParser(description='Reinforcement learning training on the MiraMar environment')
 parser.add_argument('-t', '--train', action='store_true', help='Train a reinforcement learning agent')
 parser.add_argument('-p', '--play', nargs='+', help='Have a trained agent play the game using the agent.pth file')
-parser.add_argument('-g', '--generate', nargs='+', help='Have a trained agent generate a molecule for a custom path ')
+parser.add_argument('-g', '--generate', nargs='+', help='Have a trained agent generate a molecule for a custom path')
+parser.add_argument('-b', '--batch', nargs='+', help='Have a trained agent generate the best molecules for a custom path')
 args = parser.parse_args()
 
 def make_env(env_id):
@@ -302,19 +311,63 @@ def play(filename='agent.pth', custom=[]):
 	else:
 		S, I = env.reset()
 	done = False
+	Gt = 0
 	while not done:
 		S = torch.Tensor([S]).to('cpu')
 		A, _, _, _ = agent.get_action_and_value(S)
 		S, R, T, U, I = env.step(A[0].numpy())
+		Gt += R
 		done = bool(T or U)
 	print('Actions:', I['actions'])
 	print('Rewards:', I['rewards'])
 	print('Episode:', I['episode'])
 	env.render()
 
+def batch():
+	'''
+	Play the MiraMar environment using a trained PPO agent 300 times and only
+	output the molecules with the highest reward and shortest N-term to
+	C-term distance. In other words: play the environment and output only the
+	best cyclic peptides.
+	'''
+	C = [float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])]
+	a = float(sys.argv[6])
+	b = float(sys.argv[7])
+	o = float(sys.argv[8])
+	j = float(sys.argv[9])
+	w = float(sys.argv[10])
+	targets = [float(x) for x in sys.argv[11:]]
+	targets = [targets[i:i+3] for i in range(0, len(targets), 3)]
+	#short = 100
+	best = 0
+	n = 300
+	for iters in range(n):
+		Range = (1.0 - (iters - 1.0) / n) * 1000
+		agent = torch.load(sys.argv[2])
+		agent.eval()
+		env = MiraMar()
+		S, I = env.reset(custom=[C, a, b, o, j, w, targets])
+		done = False
+		Gt = 0
+		while not done:
+			S = torch.Tensor([S]).to('cpu')
+			A, _, _, _ = agent.get_action_and_value(S)
+			S, R, T, U, I = env.step(A[0].numpy())
+			Gt += R
+			done = bool(T or U)
+		C_term = np.linalg.norm(env.pose.GetAtom(env.i, 'C') - env.pose.GetAtom(0, 'N'))
+		if best-Range < Gt and 1.5 < C_term < 3.0:
+			best = Gt
+			print('Actions:', I['actions'])
+			print('Rewards:', I['rewards'])
+			print('Episode:', I['episode'])
+			env.render()
+		print(f'Attempt: {iters}\tGt = {Gt}\tC_term = {C_term}')
+
 def main():
 	if args.train:      train()
-	elif args.play:     play(filename=sys.argv[2])
+	elif args.play:
+		play(filename=sys.argv[2])
 	elif args.generate:
 		Cx = float(sys.argv[3])
 		Cy = float(sys.argv[4])
@@ -327,5 +380,7 @@ def main():
 		T = [float(x) for x in sys.argv[11:]]
 		T = [T[i:i+3] for i in range(0, len(T), 3)]
 		play(filename=sys.argv[2], custom=[[Cx, Cy, Cz], a, b, o, j, w, T])
+	elif args.batch:
+		batch()
 
 if __name__ == '__main__': main()
