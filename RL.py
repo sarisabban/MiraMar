@@ -55,6 +55,7 @@ python3 -u -B RL.py -rl
 ----------------------------
 '''
 
+import os
 import sys
 import time
 import torch
@@ -327,8 +328,8 @@ def batch():
 	'''
 	Play the MiraMar environment using a trained PPO agent 300 times and only
 	output the molecules with the highest reward and shortest N-term to
-	C-term distance. In other words: play the environment and output only the
-	best cyclic peptides.
+	C-term distance, logging only the successful attempts. In other words: play
+	the environment and output only the	best cyclic peptides.
 	'''
 	C = [float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])]
 	a = float(sys.argv[6])
@@ -338,7 +339,6 @@ def batch():
 	w = float(sys.argv[10])
 	targets = [float(x) for x in sys.argv[11:]]
 	targets = [targets[i:i+3] for i in range(0, len(targets), 3)]
-	#short = 100
 	best = 0
 	n = 300
 	for iters in range(n):
@@ -356,13 +356,21 @@ def batch():
 			Gt += R
 			done = bool(T or U)
 		C_term = np.linalg.norm(env.pose.GetAtom(env.i, 'C') - env.pose.GetAtom(0, 'N'))
+		GT = round(Gt, 3)
+		TR = round(C_term, 3)
+		print(f'Attempt: {iters}\tGt = {GT}\tC_term = {TR}')
 		if best-Range < Gt and 1.5 < C_term < 3.0:
 			best = Gt
-			print('Actions:', I['actions'])
-			print('Rewards:', I['rewards'])
-			print('Episode:', I['episode'])
-			env.render()
-		print(f'Attempt: {iters}\tGt = {Gt}\tC_term = {C_term}')
+			with open('output.log', 'a') as f:
+				ACTIONS = I['actions']
+				REWARDS = I['rewards']
+				EPISODE = I['episode']
+				f.write(f'{iters}:\n')
+				f.write(f'Actions: {ACTIONS}:\n')
+				f.write(f'Rewards: {REWARDS}:\n')
+				f.write(f'Episode: {EPISODE}:\n')
+			env.render(show=False, save=True)
+			os.rename('molecule.pdb', f'molecule_{iters}.pdb')
 
 def main():
 	if args.train:      train()
