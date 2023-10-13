@@ -365,7 +365,7 @@ def batch():
 				ACTIONS = I['actions']
 				REWARDS = I['rewards']
 				EPISODE = I['episode']
-				f.write(f'{iters}:\n')
+				f.write(f'{iters} - C_term = {C_term}:\n')
 				f.write(f'Actions: {ACTIONS}:\n')
 				f.write(f'Rewards: {REWARDS}:\n')
 				f.write(f'Episode: {EPISODE}:\n')
