@@ -23,7 +23,7 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 	`python3 -B RL_6.py -b agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
 	example:
 	`python3 -B RL_6.py -b agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
-	The agent will perform 300 attempts
+	The agent will perform 300 attempts, choose the structures with the highest reward and lowest N-term to C-term distance
 
  for a custom path and targets:
 
@@ -365,10 +365,12 @@ def batch():
 				ACTIONS = I['actions']
 				REWARDS = I['rewards']
 				EPISODE = I['episode']
-				f.write(f'{iters} - C_term = {C_term}:\n')
+				C_TERMD = round(C_term, 3)
+				f.write(f'molecule_{iters}.pdb\n')
+				f.write(f'N-term to C-term distance = {C_TERMD}:\n')
 				f.write(f'Actions: {ACTIONS}:\n')
 				f.write(f'Rewards: {REWARDS}:\n')
-				f.write(f'Episode: {EPISODE}:\n')
+				f.write(f'Episode: {EPISODE}:\n\n')
 			env.render(show=False, save=True)
 			os.rename('molecule.pdb', f'molecule_{iters}.pdb')
 
