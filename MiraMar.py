@@ -388,6 +388,15 @@ class MiraMar():
 			self.pose.data['Atoms'][-key] = self.pose.data['Atoms'].pop(key)
 		for key in list(self.pose.data['Atoms'].keys())[-1:]:
 			self.pose.data['Atoms'][key - 1] = self.pose.data['Atoms'].pop(key)
+		self.pose.data['Atoms'][length - 4][0] = 'O'
+		self.pose.data['Amino Acids'][0][2] = self.pose.data['Amino Acids'][0][2][2:]
+		for key in range(self.i + 1):
+			BB = self.pose.data['Amino Acids'][key][2]
+			SC = self.pose.data['Amino Acids'][key][3]
+			self.pose.data['Amino Acids'][key][2] = [x - 2 for x in BB]
+			self.pose.data['Amino Acids'][key][3] = [x - 2 for x in SC]
+		final = len(self.pose.data['Amino Acids']) - 1
+		self.pose.data['Amino Acids'][final][2] = self.pose.data['Amino Acids'][final][2][:-1]
 		del self.pose.data['Bonds'][2]
 		del self.pose.data['Bonds'][3]
 		del self.pose.data['Bonds'][length - 2]
