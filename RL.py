@@ -359,7 +359,7 @@ def batch():
 		GT = round(Gt, 3)
 		TR = round(C_term, 3)
 		print(f'Attempt: {iters}\tGt = {GT}\tC_term = {TR}')
-		if best-Range < Gt and 1.5 < C_term < 3.0:
+		if best-Range < Gt and 1.5 < C_term < 2.5:
 			best = Gt
 			with open('output.log', 'a') as f:
 				ACTIONS = I['actions']
