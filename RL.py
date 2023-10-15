@@ -367,10 +367,10 @@ def batch():
 				EPISODE = I['episode']
 				C_TERMD = round(C_term, 3)
 				f.write(f'molecule_{iters}.pdb\n')
-				f.write(f'N-term to C-term distance = {C_TERMD}:\n')
-				f.write(f'Actions: {ACTIONS}:\n')
-				f.write(f'Rewards: {REWARDS}:\n')
-				f.write(f'Episode: {EPISODE}:\n\n')
+				f.write(f'N-term to C-term distance = {C_TERMD}\n')
+				f.write(f'Actions: {ACTIONS}\n')
+				f.write(f'Rewards: {REWARDS}\n')
+				f.write(f'Episode: {EPISODE}\n\n')
 			env.render(show=False, save=True)
 			os.rename('molecule.pdb', f'molecule_{iters}.pdb')
 
