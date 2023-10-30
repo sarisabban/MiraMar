@@ -149,3 +149,5 @@ To generate a path and targets to a specific molecular structure you can use the
 Provided is the `RL.py` script that trains a Proximal Policy Optimization (PPO) agent on the MiraMar environment or plays an already trained agent `agent.pth`. Instructions are isolated within the script itself, since this training process is separate from the actual environment setup. The following are the training results of that produced the *agent.pth* trained agent:
 <p align="center">
 	<img src="plots.png" width="40%" height="40%"> <img src="output.png" width="28%" height="28%" /></p>
+
+## Post Generation Refinement:
