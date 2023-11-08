@@ -14,15 +14,15 @@ https://github.com/vwxyzjn/ppo-implementation-details/blob/main/ppo_multidiscret
 	`python3 -B RL.py -p agent.pth`
 
 4. To generate a molecule for a custom path and targets:
-	`python3 -B RL_6.py -g agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
+	`python3 -B RL.py -g agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
 	example:
-	`python3 -B RL_6.py -g agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
+	`python3 -B RL.py -g agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
 	Repeat the command until you get a satisfactory result, because it generates a different molecule everytime
 
 5. To generate multiple molecules but output only the best molecules for a custom path
-	`python3 -B RL_6.py -b agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
+	`python3 -B RL.py -b agent.pth Cx Cy Cz a b o j w T1x T1y T1z T2x T2y T2z ...`
 	example:
-	`python3 -B RL_6.py -b agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
+	`python3 -B RL.py -b agent.pth 3 4 5 5 4 11 12 13 5 6 8 3 1 4`
 	The agent will perform 300 attempts, choose the structures with the highest reward and lowest N-term to C-term distance
 
  for a custom path and targets:
