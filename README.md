@@ -151,3 +151,4 @@ Provided is the `RL.py` script that trains a Proximal Policy Optimization (PPO) 
 	<img src="plots.png" width="40%" height="40%"> <img src="output.png" width="28%" height="28%" /></p>
 
 ## Post Generation Refinement:
+Recomended to use [OSPREY3](https://github.com/donaldlab/OSPREY3) to refine the structure and make it more energetically favorable.
